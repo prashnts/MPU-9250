@@ -107,3 +107,18 @@ YA_OFFSET_H 7A RW
 YA_OFFSET_L 7B RW
 ZA_OFFSET_H 7D RW
 ZA_OFFSET_L 7E RW
+
+//Magnetometer Register addresses. Unfused and accessible values are noted here.
+WIA 00H R
+INFO 01H R
+ST1 02H R
+HXL 03H R
+HXH 04H R
+HYL 05H R
+HYH 06H R
+HZL 07H R
+HZH 08H R
+ST2 09H R
+CNTL 0AH RW
+ASTC 0CH RW
+I2CDIS 0FH RW
