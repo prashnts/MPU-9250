@@ -22,6 +22,7 @@ GND --------------------- GND
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include "MPU9250_Register_Map.h"
+#include "Wire.cpp"
 
 // Using the MSENSR-9250 breakout board, ADO is set to 0
 // Seven-bit device address is 110100 for ADO = 0 and 110101 for ADO = 1
