@@ -102,9 +102,18 @@ void MadgwickQuaternionUpdate(float ax, float ay, float az, float gx, float gy, 
 
 // Similar to Madgwick scheme but uses proportional and integral filtering on the error between estimated reference vectors and
 // measured ones.
-void MahonyQuaternionUpdate(float ax, float ay, float az, float gx, float gy, float gz, float mx, float my, float mz)
-{
-      float q1 = q[0], q2 = q[1], q3 = q[2], q4 = q[3];   // short name local variable for readability
+void MahonyQuaternionUpdate (
+      float ax,
+      float ay,
+      float az,
+      float gx,
+      float gy,
+      float gz,
+      float mx,
+      float my,
+      float mz ) {
+
+      float q1 = q[0], q2 = q[1], q3 = q[2], q4 = q[3];
       float norm;
       float hx, hy, bx, bz;
       float vx, vy, vz, wx, wy, wz;
@@ -157,14 +166,11 @@ void MahonyQuaternionUpdate(float ax, float ay, float az, float gx, float gy, fl
       ex = (ay * vz - az * vy) + (my * wz - mz * wy);
       ey = (az * vx - ax * vz) + (mz * wx - mx * wz);
       ez = (ax * vy - ay * vx) + (mx * wy - my * wx);
-      if (Ki > 0.0f)
-      {
+      if (Ki > 0.0f) {
             eInt[0] += ex;      // accumulate integral error
             eInt[1] += ey;
             eInt[2] += ez;
-      }
-      else
-      {
+      } else {
             eInt[0] = 0.0f;     // prevent integral wind up
             eInt[1] = 0.0f;
             eInt[2] = 0.0f;
