@@ -455,29 +455,19 @@ void readMagData(int16_t * destination) {
       destination[0] = ((int16_t)rawData[1] << 8) | rawData[0] ; // Turn the MSB and LSB into a signed 16-bit value
       destination[1] = ((int16_t)rawData[3] << 8) | rawData[2] ; // Data stored as little Endian
       destination[2] = ((int16_t)rawData[5] << 8) | rawData[4] ;
-      
     }
-    
-    
   }
-  
-  
 }
 
 
-int16_t readTempData()
-{
-  
+int16_t readTempData() {
   uint8_t rawData[2]; // x/y/z gyro register data stored here
   readBytes(MPU9250_ADDRESS, TEMP_OUT_H, 2, &rawData[0]); // Read the two raw data registers sequentially into data array
   return ((int16_t)rawData[0] << 8) | rawData[1] ; // Turn the MSB and LSB into a 16-bit value
-  
 }
 
 
-void initAK8963(float * destination)
-{
-  
+void initAK8963(float * destination) {
   // First extract the factory calibration for each magnetometer axis
   uint8_t rawData[3]; // x/y/z gyro calibration data stored here
   writeByte(AK8963_ADDRESS, AK8963_CNTL, 0x00); // Power down magnetometer
@@ -495,13 +485,11 @@ void initAK8963(float * destination)
   // and enable continuous mode data acquisition Mmode (bits [3:0]), 0010 for 8 Hz and 0110 for 100 Hz sample rates
   writeByte(AK8963_ADDRESS, AK8963_CNTL, Mscale << 4 | Mmode); // Set magnetometer data resolution and sample ODR
   delay(10);
-  
 }
 
 
 
-void initMPU9250()
-{
+void initMPU9250() {
   
   // wake up device
   writeByte(MPU9250_ADDRESS, PWR_MGMT_1, 0x00); // Clear sleep mode bit (6), enable all sensors
