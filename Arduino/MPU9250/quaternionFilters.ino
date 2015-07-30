@@ -106,10 +106,7 @@ void MadgwickQuaternionUpdate (
   q[1] = q2 * norm;
   q[2] = q3 * norm;
   q[3] = q4 * norm;
-  
 }
-
-
 
 // Similar to Madgwick scheme but uses proportional and integral filtering on the error between estimated reference vectors and
 // measured ones.
@@ -122,7 +119,8 @@ void MahonyQuaternionUpdate (
   float gz,
   float mx,
   float my,
-  float mz ) {
+  float mz
+) {
 
   float q1 = q[0], q2 = q[1], q3 = q[2], q4 = q[3];
   float norm;
@@ -208,5 +206,4 @@ void MahonyQuaternionUpdate (
   q[1] = q2 * norm;
   q[2] = q3 * norm;
   q[3] = q4 * norm;
-  
 }
