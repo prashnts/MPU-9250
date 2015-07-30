@@ -11,13 +11,13 @@ void setup() {
   
   delay(1000);
 
-  // Read the WHO_AM_I register, this is a good test of communication
   byte c = readByte(MPU9250_ADDRESS, WHO_AM_I_MPU9250);
+  byte d = readByte(AK8963_ADDRESS, WHO_AM_I_AK8963);
   
   delay(1000);
 
-  if (c == 0x71) {
-    Serial.println("MPU9250 is online");
+  if (c == 0x71 && d == 0x48) {
+    Serial.println("MPU9250 and AK8963 are online.");
     
     MPU9250SelfTest(SelfTest); // Start by performing self test and reporting values
     Serial.print("x-axis self test: acceleration trim within : "); Serial.print(SelfTest[0],1); Serial.println("% of factory value");
@@ -34,15 +34,7 @@ void setup() {
     
     initMPU9250();
     Serial.println("MPU9250 initialized for active data mode");
-    
-    // Read the WHO_AM_I register of the magnetometer, this is a good test of communication
-    byte d = readByte(AK8963_ADDRESS, WHO_AM_I_AK8963); // Read WHO_AM_I register for AK8963
-    Serial.print("AK8963 "); Serial.print("I AM "); Serial.print(d, HEX); Serial.print(" I should be "); Serial.println(0x48, HEX);
-    
-    delay(1000);
-
-    // Get magnetometer calibration from AK8963 ROM
-    initAK8963(magCalibration); Serial.println("AK8963 initialized for active data mode....");
+    initAK8963(magCalibration);
 
     if(SerialDebug) {
       Serial.print("X-Axis sensitivity adjustment value "); Serial.println(magCalibration[0], 2);
