@@ -116,27 +116,33 @@ float eInt[3] = {0.0f, 0.0f, 0.0f};  // vector to hold integral error for Mahony
 //====== Set of useful function to access acceleration. gyroscope, magnetometer, and temperature data
 //===================================================================================================================
 
+/**
+ * Sets the global `mRes` with the Magnetometer resolution.
+ * Possible magnetometer scales and register bit settings are:
+ * 14 bit 0
+ * 16 bit 1
+ */
 void getMres() {
   switch (Mscale) {
-    // Possible magnetometer scales (and their register bit settings) are:
-    // 14 bit resolution (0) and 16 bit resolution (1)
-
     case MFS_14BITS:
-      mRes = 10.*4219./8190.; // Proper scale to return milliGauss
+      mRes = 10.*4219./8190.;
       break;
     case MFS_16BITS:
-      mRes = 10.*4219./32760.0; // Proper scale to return milliGauss
+      mRes = 10.*4219./32760.0;
       break; 
   }
 }
 
-
+/**
+ * Sets the global `gRes` with the Gyroscope resolution.
+ * Possible Gyro scales and register bit settings are:
+ *  250 DPS 00
+ *  500 DPS 01
+ *  1000 DPS 10
+ *  2000 DPS 11
+ */
 void getGres() {
   switch (Gscale) {
-    // Possible gyro scales (and their register bit settings) are:
-    // 250 DPS (00), 500 DPS (01), 1000 DPS (10), and 2000 DPS (11).
-    // Here's a bit of an algorithm to calculate DPS/(ADC tick) based on that 2-bit value:
-
     case GFS_250DPS:
       gRes = 250.0/32768.0;
       break;
@@ -152,13 +158,16 @@ void getGres() {
   }
 }
 
-
+/**
+ * Sets the global `aRes` with the Accelerometer resolution.
+ * Possible Accelerometer scales and register bit settings are:
+ *  2 Gs 00
+ *  4 Gs 01
+ *  8 Gs 10
+ *  16 Gs 11
+ */
 void getAres() {
   switch (Ascale) {
-    // Possible accelerometer scales (and their register bit settings) are:
-    // 2 Gs (00), 4 Gs (01), 8 Gs (10), and 16 Gs (11).
-    // Here's a bit of an algorith to calculate DPS/(ADC tick) based on that 2-bit value:
-
     case AFS_2G:
       aRes = 2.0/32768.0;
       break;
@@ -434,8 +443,7 @@ void calibrateMPU9250(float * dest1, float * dest2) {
     if((accel_bias_reg[ii] & mask)) mask_bit[ii] = 0x01; // If temperature compensation bit is set, record that fact in mask_bit
     
   }
-  
-  
+
   // Construct total accelerometer bias, including calculated average accelerometer bias from above
   accel_bias_reg[0] -= (accel_bias[0]/8); // Subtract calculated averaged accelerometer bias scaled to 2048 LSB/g (16 g full scale)
   accel_bias_reg[1] -= (accel_bias[1]/8);
