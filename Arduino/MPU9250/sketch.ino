@@ -49,7 +49,7 @@ void setup() {
   }
 }
 
-void loop() {  
+void loop() {
   // If intPin goes high, all data registers have new data
   if (readByte(MPU9250_ADDRESS, INT_STATUS) & 0x01) {
     // On interrupt, check if data ready interrupt

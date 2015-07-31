@@ -1,21 +1,19 @@
-#include <SPI.h>
 #include <Wire.h>
 #include "MPU9250_Register_Map.h"
 
 
-#define MPU9250_ADDRESS 0x69 // Device address when ADO = 1
-//#define MPU9250_ADDRESS 0x68 // Device address when ADO = 0
-#define AK8963_ADDRESS 0x0C  // Address of magnetometer
+#define MPU9250_ADDRESS 0x69
+//#define MPU9250_ADDRESS 0x68
+#define AK8963_ADDRESS 0x0C
 
-#define AHRS true
+#define AHRS false
 #define SerialDebug true
 
-// Set initial input parameters
 enum Ascale {
   AFS_2G = 0,
   AFS_4G,
   AFS_8G,
-  AFS_16G 
+  AFS_16G
 };
 
 enum Gscale {
@@ -51,7 +49,7 @@ float magCalibration[3] = {0, 0, 0},
       gyroBias[3]       = {0, 0, 0},
       accelBias[3]      = {0, 0, 0};
 
-int16_t tempCount;  // temperature raw count output
+int16_t tempCount;   // temperature raw count output
 float   temperature; // Stores the real internal chip temperature in degrees Celsius
 
 float   SelfTest[6]; // holds results of gyro and accelerometer self test
