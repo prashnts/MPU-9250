@@ -19,6 +19,7 @@ GND --------------------- GND
 
 */
 #include <Wire.h>
+#include <ArduinoJson.h>
 #include "MPU9250_Register_Map.h"
 
 // Using the MSENSR-9250 breakout board, ADO is set to 0
@@ -31,8 +32,7 @@ GND --------------------- GND
 #define AK8963_ADDRESS  0x0C  // Address of magnetometer
 #endif
 
-#define AHRS true
-#define SerialDebug true
+#define SerialDebug false
 
 // Set initial input parameters
 enum Ascale {
@@ -65,6 +65,7 @@ float aRes, gRes, mRes;  // scale resolutions per LSB for the sensors
 // Pin definitions
 int intPin = 12; // These can be changed, 2 and 3 are the Arduinos ext int pins
 int myLed  = 13; // Set up pin 13 led for toggling
+bool prevLed = false;
 
 int16_t accelCount[3]; // Stores the 16-bit signed accelerometer sensor output
 int16_t gyroCount[3];  // Stores the 16-bit signed gyro sensor output
@@ -97,6 +98,7 @@ float zeta = sqrt(3.0f / 4.0f) * GyroMeasDrift;
 float pitch, yaw, roll;
 float deltat = 0.0f, sum = 0.0f; // integration interval for both filter schemes
 uint32_t lastUpdate = 0, firstUpdate = 0; // used to calculate integration interval
+uint32_t delt_t = 0, count = 0;
 uint32_t Now = 0; // used to calculate integration interval
 
 float ax, ay, az, gx, gy, gz, mx, my, mz; // variables to hold latest sensor data values
@@ -853,6 +855,7 @@ void MahonyQuaternionUpdate (
   
   // Normalise accelerometer measurement
   norm = sqrt(ax * ax + ay * ay + az * az);
+  
   if (norm == 0.0f) return; // handle NaN
   norm = 1.0f / norm;        // use reciprocal for division
   ax *= norm;
@@ -921,50 +924,33 @@ void MahonyQuaternionUpdate (
 
 void setup() {
   Wire.begin();
-  Serial.begin(38400);
+  Serial.begin(19200);
 
   // Set up the interrupt pin, its set as active high, push-pull
   pinMode(intPin, INPUT);
   digitalWrite(intPin, LOW);
   pinMode(myLed, OUTPUT);
   digitalWrite(myLed, HIGH);
-  
-  delay(1000);
 
   byte c = readByte(MPU9250_ADDRESS, WHO_AM_I_MPU9250);
   byte d = readByte(AK8963_ADDRESS, WHO_AM_I_AK8963);
-  
-  delay(1000);
 
-  if (c == 0x71 && d == 0x48) {
-    Serial.println("MPU9250 and AK8963 are online.");
+  if (c == 0x71) {
+    Serial.println("INFO: MPU9250 and AK8963 are online.");
     
     MPU9250SelfTest(SelfTest);
-    Serial.print("x-axis self test: acceleration trim within : "); Serial.print(SelfTest[0],1); Serial.println("% of factory value");
-    Serial.print("y-axis self test: acceleration trim within : "); Serial.print(SelfTest[1],1); Serial.println("% of factory value");
-    Serial.print("z-axis self test: acceleration trim within : "); Serial.print(SelfTest[2],1); Serial.println("% of factory value");
-    Serial.print("x-axis self test: gyration trim within : "); Serial.print(SelfTest[3],1); Serial.println("% of factory value");
-    Serial.print("y-axis self test: gyration trim within : "); Serial.print(SelfTest[4],1); Serial.println("% of factory value");
-    Serial.print("z-axis self test: gyration trim within : "); Serial.print(SelfTest[5],1); Serial.println("% of factory value");
-
     calibrateMPU9250(gyroBias, accelBias);
 
-    delay(1000);
-    
+    delay(100);
     initMPU9250();
     initAK8963(magCalibration);
-
-    if(SerialDebug) {
-      Serial.print("X-Axis sensitivity adjustment value "); Serial.println(magCalibration[0], 2);
-      Serial.print("Y-Axis sensitivity adjustment value "); Serial.println(magCalibration[1], 2);
-      Serial.print("Z-Axis sensitivity adjustment value "); Serial.println(magCalibration[2], 2); 
-    }
-    delay(1000);
   }
 
   else {
     Serial.print("Could not connect to MPU9250: 0x");
-    Serial.println(c, HEX);
+    Serial.print(c, HEX);
+    Serial.print("; 0x");
+    Serial.println(d, HEX);
     while(1);
   }
 }
@@ -1003,86 +989,68 @@ void loop() {
   }
 
   Now = micros();
-  // set integration time by time elapsed since last filter update
   deltat = ((Now - lastUpdate)/1000000.0f);
   lastUpdate = Now;
   
   sum += deltat;
-//  sumCount++;
+  MahonyQuaternionUpdate(ax, ay, az, gx * PI / 180.0f, gy * PI / 180.0f, gz * PI / 180.0f, my, mx, mz);
+  delt_t = millis() - count;
 
-  MahonyQuaternionUpdate(ax, ay, az, gx*PI/180.0f, gy*PI/180.0f, gz*PI/180.0f, my, mx, mz);
+  //if (delt_t > 200) {
+    yaw  = atan2(2.0f * (q[1] * q[2] + q[0] * q[3]), q[0] * q[0] + q[1] * q[1] - q[2] * q[2] - q[3] * q[3]);
+    pitch = -asin(2.0f * (q[1] * q[3] - q[0] * q[2]));
+    roll = atan2(2.0f * (q[0] * q[1] + q[2] * q[3]), q[0] * q[0] - q[1] * q[1] - q[2] * q[2] + q[3] * q[3]);
+    pitch *= 180.0f / PI;
+    yaw   *= 180.0f / PI;
+    yaw   -= 1.5;  // Magnetic Declination at current location.
+    roll  *= 180.0f / PI;
 
-  if (!AHRS) {
-    //delt_t = millis() - count;
-    //if(delt_t > 500) {
-      if(SerialDebug) {
-        // Print acceleration values in milligs!
-        Serial.print("X-acceleration: "); Serial.print(1000*ax); Serial.print(" mg ");
-        Serial.print("Y-acceleration: "); Serial.print(1000*ay); Serial.print(" mg ");
-        Serial.print("Z-acceleration: "); Serial.print(1000*az); Serial.println(" mg ");
-        
-        // Print gyro values in degree/sec
-        Serial.print("X-gyro rate: "); Serial.print(gx, 3); Serial.print(" degrees/sec ");
-        Serial.print("Y-gyro rate: "); Serial.print(gy, 3); Serial.print(" degrees/sec ");
-        Serial.print("Z-gyro rate: "); Serial.print(gz, 3); Serial.println(" degrees/sec");
-        
-        // Print mag values in degree/sec
-        Serial.print("X-mag field: "); Serial.print(mx); Serial.print(" mG ");
-        Serial.print("Y-mag field: "); Serial.print(my); Serial.print(" mG ");
-        Serial.print("Z-mag field: "); Serial.print(mz); Serial.println(" mG");
-        
-        tempCount = readTempData(); // Read the adc values
-        temperature = ((float) tempCount) / 333.87 + 21.0; // Temperature in degrees Centigrade
-        // Print temperature in degrees Centigrade
-        Serial.print("Temperature is "); Serial.print(temperature, 1); Serial.println(" degrees C"); // Print T values to tenths of s degree C 
-      }
-      //count = millis();
-      digitalWrite(myLed, !digitalRead(myLed));
-    //}
-  }
-  else {
-    // Serial print and/or display at 0.5 s rate independent of data rates
-    //delt_t = millis() - count;
 
-    //if (delt_t > 500) {
-      if(SerialDebug) {
-        Serial.print("ax = "); Serial.print((int)1000*ax);
-        Serial.print(" ay = "); Serial.print((int)1000*ay);
-        Serial.print(" az = "); Serial.print((int)1000*az); Serial.println(" mg");
-        Serial.print("gx = "); Serial.print( gx, 2);
-        Serial.print(" gy = "); Serial.print( gy, 2);
-        Serial.print(" gz = "); Serial.print( gz, 2); Serial.println(" deg/s");
-        Serial.print("mx = "); Serial.print( (int)mx );
-        Serial.print(" my = "); Serial.print( (int)my );
-        Serial.print(" mz = "); Serial.print( (int)mz ); Serial.println(" mG");
-        
-        Serial.print("q0 = "); Serial.print(q[0]);
-        Serial.print(" qx = "); Serial.print(q[1]);
-        Serial.print(" qy = "); Serial.print(q[2]);
-        Serial.print(" qz = "); Serial.println(q[3]);
-      }
+    StaticJsonBuffer<200> jsonBuffer;
 
-      yaw  = atan2(2.0f * (q[1] * q[2] + q[0] * q[3]), q[0] * q[0] + q[1] * q[1] - q[2] * q[2] - q[3] * q[3]);
-      pitch = -asin(2.0f * (q[1] * q[3] - q[0] * q[2]));
-      roll = atan2(2.0f * (q[0] * q[1] + q[2] * q[3]), q[0] * q[0] - q[1] * q[1] - q[2] * q[2] + q[3] * q[3]);
-      pitch *= 180.0f / PI;
-      yaw   *= 180.0f / PI;
-      yaw   -= 13.8; // Declination at Danville, California is 13 degrees 48 minutes and 47 seconds on 2014-04-04
-      roll  *= 180.0f / PI;
+    JsonObject& root = jsonBuffer.createObject();
+    //root["time"] = millis();
 
-      if(SerialDebug) {
-        Serial.print("Yaw, Pitch, Roll: ");
-        Serial.print(yaw, 2);
-        Serial.print(", ");
-        Serial.print(pitch, 2);
-        Serial.print(", ");
-        Serial.println(roll, 2);
-        //Serial.print("rate = "); Serial.print((float)sumCount/sum, 2); Serial.println(" Hz");
-      }
-      //count = millis();
-      //sumCount = 0;
-      sum = 0;
-    //}
-  }
+    JsonArray& accl = root.createNestedArray("accl");
+    accl.add(ax, 5);
+    accl.add(ay, 5);
+    accl.add(az, 5);
+
+    JsonArray& gyro = root.createNestedArray("gyro");
+    gyro.add(gx, 5);
+    gyro.add(gy, 5);
+    gyro.add(gz, 5);
+
+    JsonArray& cmps = root.createNestedArray("cmps");
+    cmps.add(mx, 5);
+    cmps.add(my, 5);
+    cmps.add(mz, 5);
+
+    JsonArray& ypr = root.createNestedArray("ypr");
+    ypr.add(yaw, 5);
+    ypr.add(pitch, 5);
+    ypr.add(roll, 5);
+
+    JsonArray& qtr = root.createNestedArray("qtr");
+    qtr.add(q[0], 5);
+    qtr.add(q[1], 5);
+    qtr.add(q[2], 5);
+    qtr.add(q[3], 5);
+
+    tempCount = readTempData();
+    temperature = ((float) tempCount) / 333.87 + 21.0;
+    root["temperature"] = temperature;
+
+    root.printTo(Serial);
+    Serial.println();
+    count = millis();
+  //}
+
+  prevLed = digitalRead(myLed);
+  digitalWrite(myLed, !prevLed);
+  delay(10);
+  Serial.flush();
 }
+
+
 
