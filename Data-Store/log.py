@@ -8,8 +8,11 @@ import glob
 import json
 import signal
 import sys
+from itertools import cycle
+from influxdb import InfluxDBClient
 
 serial_port = serial.Serial()
+progress_pool = cycle([".  ", ".. ", "..."])
 
 @click.command()
 @click.option('--baud_rate', default = 19200, help='Override the default baud_rate value.')
@@ -27,9 +30,15 @@ def routine(verbose, baud_rate):
     click.secho("[INF] ", fg = 'cyan', nl = False)
     click.secho("Serial Port '{0}' opened.".format(serial_port.name))
     while True:
-        line = serial_port.readline().decode('ascii')
-        act_upon(line)
-
+        try:
+            line = serial_port.readline().decode('utf-8')
+            act_upon(line)
+        except Exception:
+            click.secho("\n[ERR] ", fg = 'cyan', nl = False, err = True)
+            click.secho("Connection Lost.", err = True, fg = 'red')
+            click.secho("[INF] ", fg = 'cyan', nl = False)
+            click.secho("Terminating Process.")
+            sys.exit(1)
 
 def open_serial_port(baud_rate):
     global serial_port
@@ -42,14 +51,14 @@ def open_serial_port(baud_rate):
 
     port_number = click.prompt('Please enter the Serial Port Number', type = int)
     try:
-        ser = serial.Serial(ports[port_number - 1], baud_rate, timeout = 2)
+        ser = serial.Serial(ports[port_number - 1], baud_rate)
         serial_port = ser
     except Exception:
         click.secho("[ERR] ", fg = 'cyan', nl = False, err = True)
         click.secho("Cannot open the Serial Port at '{0}'.".format(ports[port_number - 1]), err = True, fg = 'red')
         click.secho("[INF] ", fg = 'cyan', nl = False)
         click.secho("Terminating Process.".format(index))
-        exit()
+        sys.exit(1)
 
 def act_upon(line):
     try:
@@ -61,12 +70,21 @@ def act_upon(line):
             'ypr' in dat,
             'qtr' in dat
         ]):
-            print("Valid JSON")
+            inf = click.style("[LOGGING DATA] {0}".format(next(progress_pool)), fg = 'cyan')
+            click.secho('\r{0}'.format(inf), nl = False)
+            # Add data in influx now
     except ValueError:
         if "online" in line:
             click.secho("[INF] ", fg = 'cyan', nl = False)
             click.secho("Sensors are Online. Beginning Data Logging.")
+            click.secho("[INF] ", fg = 'yellow', nl = False)
+            click.secho("Press CTRL + C to stop.", )
 
+def signal_handler(signal, frame):
+    click.secho("\n[INF] ", fg = 'cyan', nl = False)
+    click.secho("Closing Ports and Exiting.")
+    serial_port.close()
+    sys.exit(0)
 
 def list_serial_ports():
     system_name = platform.system()
@@ -89,4 +107,5 @@ def list_serial_ports():
         return glob.glob('/dev/ttyS*') + glob.glob('/dev/ttyUSB*')
 
 if __name__ == '__main__':
+    signal.signal(signal.SIGINT, signal_handler)
     routine()
