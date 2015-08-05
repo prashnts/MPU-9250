@@ -1002,7 +1002,7 @@ void loop() {
     roll = atan2(2.0f * (q[0] * q[1] + q[2] * q[3]), q[0] * q[0] - q[1] * q[1] - q[2] * q[2] + q[3] * q[3]);
     pitch *= 180.0f / PI;
     yaw   *= 180.0f / PI;
-    yaw   -= 1.5;  // Magnetic Declination at current location.
+    yaw   -= 13.5;  // Magnetic Declination at current location.
     roll  *= 180.0f / PI;
 
 
@@ -1048,7 +1048,7 @@ void loop() {
 
   prevLed = digitalRead(myLed);
   digitalWrite(myLed, !prevLed);
-  delay(10);
+  delay(05);
   Serial.flush();
 }
 
