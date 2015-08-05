@@ -2,7 +2,14 @@
 # -*- coding: utf-8 -*-
 
 import serial
-import click, platform, glob
+import click
+import platform
+import glob
+import json
+import signal
+import sys
+
+serial_port = serial.Serial()
 
 @click.command()
 @click.option('--baud_rate', default = 19200, help='Override the default baud_rate value.')
@@ -16,13 +23,17 @@ def routine(verbose, baud_rate):
     All tuning/synchronization is untested and there may be race around conditions
     here.
     """
-    serial_port = open_serial_port(baud_rate)
+    open_serial_port(baud_rate)
     click.secho("[INF] ", fg = 'cyan', nl = False)
     click.secho("Serial Port '{0}' opened.".format(serial_port.name))
     while True:
-        line = serial_port.readline()
+        line = serial_port.readline().decode('ascii')
+        act_upon(line)
+
 
 def open_serial_port(baud_rate):
+    global serial_port
+
     ports = list_serial_ports()
 
     for index, port in enumerate(ports, start = 1):
@@ -32,7 +43,7 @@ def open_serial_port(baud_rate):
     port_number = click.prompt('Please enter the Serial Port Number', type = int)
     try:
         ser = serial.Serial(ports[port_number - 1], baud_rate, timeout = 2)
-        return ser
+        serial_port = ser
     except Exception:
         click.secho("[ERR] ", fg = 'cyan', nl = False, err = True)
         click.secho("Cannot open the Serial Port at '{0}'.".format(ports[port_number - 1]), err = True, fg = 'red')
@@ -41,7 +52,21 @@ def open_serial_port(baud_rate):
         exit()
 
 def act_upon(line):
-    pass
+    try:
+        dat = json.loads(line)
+        if all([
+            'accl' in dat,
+            'gyro' in dat,
+            'cmps' in dat,
+            'ypr' in dat,
+            'qtr' in dat
+        ]):
+            print("Valid JSON")
+    except ValueError:
+        if "online" in line:
+            click.secho("[INF] ", fg = 'cyan', nl = False)
+            click.secho("Sensors are Online. Beginning Data Logging.")
+
 
 def list_serial_ports():
     system_name = platform.system()
@@ -65,4 +90,3 @@ def list_serial_ports():
 
 if __name__ == '__main__':
     routine()
-
