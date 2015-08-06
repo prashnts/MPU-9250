@@ -1035,7 +1035,6 @@ void loop() {
     qtr.add(q[0], 5);
     qtr.add(q[1], 5);
     qtr.add(q[2], 5);
-    qtr.add(q[3], 5);
 
     tempCount = readTempData();
     temperature = ((float) tempCount) / 333.87 + 21.0;
