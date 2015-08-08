@@ -13,7 +13,7 @@ from influxdb import InfluxDBClient
 
 serial_port = serial.Serial()
 client = None
-progress_pool = cycle(["X  ", "__ ", "___"])
+progress_pool = cycle(["_  ", "_  ", "_  ", "__ ", "__ ", "__ ", "___", "___", "___"])
 
 @click.command()
 @click.option('--baud_rate', default = 19200, help='Override the default baud_rate value.')
