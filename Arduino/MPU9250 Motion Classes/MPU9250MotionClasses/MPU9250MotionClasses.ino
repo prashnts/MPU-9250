@@ -4,9 +4,6 @@
 #include <SD.h>
 #include "MPU9250_Register_Map.h"
 
-#define MPU9250_ADDRESS 0x69
-#define AK8963_ADDRESS  0x0C
-
 // Set initial input parameters
 enum Ascale {
   AFS_2G = 0,
@@ -27,7 +24,6 @@ enum Mscale {
   MFS_16BITS      // 0.15 mG per LSB
 };
 
-// Specify sensor full scale
 uint8_t Gscale = GFS_250DPS;
 uint8_t Ascale = AFS_2G;
 uint8_t Mscale = MFS_16BITS;

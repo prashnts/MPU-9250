@@ -5,6 +5,9 @@
 #ifndef MPU_9250_Register_Map
 #define MPU_9250_Register_Map
 
+#define MPU9250_ADDRESS 0x69
+#define AK8963_ADDRESS  0x0C
+
 //Magnetometer Registers
 #define AK8963_ADDRESS      0x0C
 #define WHO_AM_I_AK8963     0x00    // should return 0x48
