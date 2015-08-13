@@ -674,7 +674,7 @@ bool initSDCard(int logger_location, int motionClass) {
     return false;
   }
   char file_name[8];
-  sprintf(file_name, "%d_%d.NJS", logger_location, motionClass);
+  sprintf(file_name, "%d_%2d.NJS", logger_location, motionClass);
   dataFile = SD.open(file_name, FILE_WRITE);
 
   if (!dataFile) {
