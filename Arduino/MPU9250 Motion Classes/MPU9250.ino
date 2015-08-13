@@ -923,20 +923,48 @@ void MahonyQuaternionUpdate (
   q[3] = q4 * norm;
 }
 
-File dataFile;
+void init_dip_switch() {
+  pinMode(2, INPUT);
+  pinMode(3, INPUT);
+  pinMode(4, INPUT);
+  pinMode(5, INPUT);
+  pinMode(6, INPUT);
+  pinMode(7, INPUT);
+  pinMode(8, INPUT);
+}
 
-void initSDCard() {
+int read_motion_class() {
+  int out = 0x0000;
+  for (int i = 5; i >= 2; i--) {
+    out = (out << 1) | digitalRead(i);
+  }
+  return (out + 1);
+}
+
+bool read_sd_active() {
+  return (bool) digitalRead(8);
+}
+
+int read_logger_location() {
+  int out = 0x00;
+  for (int i = 7; i >= 6; i--) {
+    out = (out << 1) | digitalRead(i);
+  }
+  return (out + 1);
+}
+
+File dataFile;
+int motionClass = 0x0000;
+
+bool initSDCard() {
   pinMode(SS, OUTPUT);
   if (!SD.begin(10)) {
-    Serial.println("INFO: Card failed, or not present");
-    while (1) ;
+    return false;
   }
-  Serial.println("INFO: Card initialized.");
 
   dataFile = SD.open("datalog.txt", FILE_WRITE);
   if (!dataFile) {
-    Serial.println("error opening datalog.txt");
-    while (1) ;
+    return false;
   }
 }
 

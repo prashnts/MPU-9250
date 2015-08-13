@@ -21,7 +21,6 @@ void init_dip_switch() {
   pinMode(6, INPUT);
   pinMode(7, INPUT);
   pinMode(8, INPUT);
-  //pinMode(9, INPUT);
 }
 
 int read_motion_class() {
