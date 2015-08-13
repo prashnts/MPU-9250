@@ -1,4 +1,3 @@
-
 /* MPU9250 Basic Example Code
 
 Demonstrate basic MPU-9250 functionality including parameterizing the register addresses, initializing the sensor,
@@ -34,8 +33,6 @@ GND --------------------- GND
 #define AK8963_ADDRESS  0x0C  // Address of magnetometer
 #endif
 
-#define SerialDebug false
-
 // Set initial input parameters
 enum Ascale {
   AFS_2G = 0,
@@ -63,11 +60,6 @@ uint8_t Mscale = MFS_16BITS;
 uint8_t Mmode = 0x02; // 2 for 8 Hz, 6 for 100 Hz continuous magnetometer data read
 
 float aRes, gRes, mRes;  // scale resolutions per LSB for the sensors
-
-// Pin definitions
-int intPin = 12; // These can be changed, 2 and 3 are the Arduinos ext int pins
-int myLed  = 13; // Set up pin 13 led for toggling
-bool prevLed = false;
 
 int16_t accelCount[3]; // Stores the 16-bit signed accelerometer sensor output
 int16_t gyroCount[3];  // Stores the 16-bit signed gyro sensor output
@@ -220,18 +212,6 @@ void readMagData(int16_t * destination) {
       destination[2] = ((int16_t)rawData[5] << 8) | rawData[4];
     }
   }
-}
-
-/**
- * Reads the Magnetometer data from the device.
- * @return 16 bit Temperature reading data.
- */
-int16_t readTempData() {
-  uint8_t rawData[2];
-
-  // Read the two raw data registers sequentially into data array
-  readBytes(MPU9250_ADDRESS, TEMP_OUT_H, 2, &rawData[0]);
-  return ((int16_t)rawData[0] << 8) | rawData[1];
 }
 
 /**
@@ -924,13 +904,9 @@ void MahonyQuaternionUpdate (
 }
 
 void init_dip_switch() {
-  pinMode(2, INPUT);
-  pinMode(3, INPUT);
-  pinMode(4, INPUT);
-  pinMode(5, INPUT);
-  pinMode(6, INPUT);
-  pinMode(7, INPUT);
-  pinMode(8, INPUT);
+  for (int i = 2; i <= 8; i++) {
+    pinMode(i, INPUT);
+  }
 }
 
 int read_motion_class() {
@@ -954,24 +930,28 @@ int read_logger_location() {
 }
 
 File dataFile;
-int motionClass = 0x0000;
+int motionClass = 0x0000, logger_location = 0x00;
 
-bool initSDCard() {
+bool initSDCard(int logger_location, int motionClass) {
   pinMode(SS, OUTPUT);
   if (!SD.begin(10)) {
     return false;
   }
+  char file_name[8];
+  sprintf(file_name, "%d_%d.NJS", logger_location, motionClass);
+  dataFile = SD.open(file_name, FILE_WRITE);
 
-  dataFile = SD.open("datalog.txt", FILE_WRITE);
   if (!dataFile) {
     return false;
   }
-}
 
+  return true;
+}
 
 void setup() {
   Wire.begin();
   Serial.begin(19200);
+  Serial.println();
 
   // Set up the interrupt pin, its set as active high, push-pull
   // pinMode(intPin, INPUT);
@@ -979,15 +959,28 @@ void setup() {
   // pinMode(myLed, OUTPUT);
   // digitalWrite(myLed, HIGH);
 
-
-
-
+  init_dip_switch();
+  motionClass = read_motion_class();
+  logger_location = read_logger_location();
+  bool sd_ok = initSDCard(logger_location, motionClass);
 
   byte c = readByte(MPU9250_ADDRESS, WHO_AM_I_MPU9250);
   byte d = readByte(AK8963_ADDRESS, WHO_AM_I_AK8963);
 
+  if (sd_ok) {
+    Serial.println("I:SD");
+    Serial.print("L:");
+    Serial.println(logger_location);
+    Serial.print("M:");
+    Serial.println(motionClass);
+  }
+  else {
+    Serial.print("E:SD");
+    while(1);
+  }
+
   if (c == 0x71) {
-    Serial.println("INFO: MPU9250 and AK8963 are online.");
+    Serial.println("I:IMU");
     
     MPU9250SelfTest(SelfTest);
     calibrateMPU9250(gyroBias, accelBias);
@@ -996,12 +989,8 @@ void setup() {
     initMPU9250();
     initAK8963(magCalibration);
   }
-
   else {
-    Serial.print("Could not connect to MPU9250: 0x");
-    Serial.print(c, HEX);
-    Serial.print("; 0x");
-    Serial.println(d, HEX);
+    Serial.print("E:IMU");
     while(1);
   }
 }
@@ -1044,54 +1033,32 @@ void loop() {
   lastUpdate = Now;
   
   sum += deltat;
-  MahonyQuaternionUpdate(ax, ay, az, gx * PI / 180.0f, gy * PI / 180.0f, gz * PI / 180.0f, my, mx, mz);
+  //MahonyQuaternionUpdate(ax, ay, az, gx * PI / 180.0f, gy * PI / 180.0f, gz * PI / 180.0f, my, mx, mz);
   delt_t = millis() - count;
 
-  //if (delt_t > 200) {
-    yaw  = atan2(2.0f * (q[1] * q[2] + q[0] * q[3]), q[0] * q[0] + q[1] * q[1] - q[2] * q[2] - q[3] * q[3]);
-    pitch = -asin(2.0f * (q[1] * q[3] - q[0] * q[2]));
-    roll = atan2(2.0f * (q[0] * q[1] + q[2] * q[3]), q[0] * q[0] - q[1] * q[1] - q[2] * q[2] + q[3] * q[3]);
-    pitch *= 180.0f / PI;
-    yaw   *= 180.0f / PI;
-    yaw   -= 13.5;  // Magnetic Declination at current location.
-    roll  *= 180.0f / PI;
 
 
-    StaticJsonBuffer<200> jsonBuffer;
+    StaticJsonBuffer<190> jsonBuffer;
 
     JsonObject& root = jsonBuffer.createObject();
-    //root["time"] = millis();
 
-    JsonArray& accl = root.createNestedArray("accl");
+    JsonArray& accl = root.createNestedArray("A");
     accl.add(ax, 5);
     accl.add(ay, 5);
     accl.add(az, 5);
 
-    JsonArray& gyro = root.createNestedArray("gyro");
+    JsonArray& gyro = root.createNestedArray("G");
     gyro.add(gx, 5);
     gyro.add(gy, 5);
     gyro.add(gz, 5);
 
-    JsonArray& cmps = root.createNestedArray("cmps");
+    JsonArray& cmps = root.createNestedArray("C");
     cmps.add(mx, 5);
     cmps.add(my, 5);
     cmps.add(mz, 5);
 
-    JsonArray& ypr = root.createNestedArray("ypr");
-    ypr.add(yaw, 5);
-    ypr.add(pitch, 5);
-    ypr.add(roll, 5);
-
-    JsonArray& qtr = root.createNestedArray("qtr");
-    qtr.add(q[0], 5);
-    qtr.add(q[1], 5);
-    qtr.add(q[2], 5);
-
-    tempCount = readTempData();
-    temperature = ((float) tempCount) / 333.87 + 21.0;
-    root["temperature"] = temperature;
-
     root.printTo(dataFile);
+    dataFile.println();
     root.printTo(Serial);
     Serial.println();
     count = millis();
@@ -1103,3 +1070,4 @@ void loop() {
   Serial.flush();
   dataFile.flush();
 }
+
