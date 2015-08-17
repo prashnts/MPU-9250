@@ -13,7 +13,7 @@ from influxdb import InfluxDBClient
 
 serial_port = serial.Serial()
 client = None
-progress_pool = cycle(["_  ", "_  ", "_  ", "__ ", "__ ", "__ ", "___", "___", "___"])
+progress_pool = cycle(["_  ", "__ ", "___"])
 
 @click.command()
 @click.option('--baud_rate', default = 19200, help='Override the default baud_rate value.')
@@ -78,11 +78,9 @@ def act_upon(line):
     try:
         dat = json.loads(line)
         if all([
-            'accl' in dat,
-            'gyro' in dat,
-            'cmps' in dat,
-            'ypr' in dat,
-            'qtr' in dat
+            'A' in dat,
+            'G' in dat,
+            'C' in dat
         ]):
             inf = click.style("[LOGGING DATA] {0}".format(next(progress_pool)), fg = 'cyan')
             click.secho('\r{0}'.format(inf), nl = False)
@@ -94,9 +92,9 @@ def act_upon(line):
                         "host": "server01",
                     },
                     "fields": {
-                        "x": dat['accl'][0],
-                        "y": dat['accl'][1],
-                        "z": dat['accl'][2]
+                        "x": dat['A'][0],
+                        "y": dat['A'][1],
+                        "z": dat['A'][2]
                     }
                 },
                 {
@@ -105,9 +103,9 @@ def act_upon(line):
                         "host": "server01",
                     },
                     "fields": {
-                        "x": dat['gyro'][0],
-                        "y": dat['gyro'][1],
-                        "z": dat['gyro'][2]
+                        "x": dat['G'][0],
+                        "y": dat['G'][1],
+                        "z": dat['G'][2]
                     }
                 },
                 {
@@ -116,42 +114,24 @@ def act_upon(line):
                         "host": "server01",
                     },
                     "fields": {
-                        "x": dat['cmps'][0],
-                        "y": dat['cmps'][1],
-                        "z": dat['cmps'][2]
-                    }
-                },
-                {
-                    "measurement": "principle_axes",
-                    "tags": {
-                        "host": "server01",
-                    },
-                    "fields": {
-                        "yaw":   dat['ypr'][0],
-                        "pitch": dat['ypr'][1],
-                        "roll":  dat['ypr'][2]
-                    }
-                },
-                {
-                    "measurement": "quaternion",
-                    "tags": {
-                        "host": "server01",
-                    },
-                    "fields": {
-                        "x": dat['qtr'][0],
-                        "y": dat['qtr'][1],
-                        "z": dat['qtr'][2]
+                        "x": dat['C'][0],
+                        "y": dat['C'][1],
+                        "z": dat['C'][2]
                     }
                 }
             ]
             client.write_points(json_body)
 
     except ValueError:
-        if "online" in line:
+        if "ok" in line:
             click.secho("[INF] ", fg = 'cyan', nl = False)
             click.secho("Sensors are Online. Beginning Data Logging.")
             click.secho("[INF] ", fg = 'yellow', nl = False)
             click.secho("Press CTRL + C to stop.", )
+        if "L" in line:
+            click.echo(line)
+        if "M" in line:
+            click.echo(line)
 
 def signal_handler(signal, frame):
     """
