@@ -1,0 +1,34 @@
+{
+  "name": "Three.Point",
+  "version": "0.0.1",
+  "homepage": "https://github.com/PrashntS/MPU-9250",
+  "authors": [
+    "Prashant Sinha <prashant@ducic.ac.in>"
+  ],
+  "description": "A 3D Point Cloud visualiser written in JS using Three.JS",
+  "main": "src/three.point.js",
+  "moduleType": [
+    "globals",
+    "node"
+  ],
+  "keywords": [
+    "Three",
+    "JS",
+    "Point",
+    "Cloud",
+    "Data",
+    "3D",
+    "WebGL"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "threejs": "*"
+  }
+}
