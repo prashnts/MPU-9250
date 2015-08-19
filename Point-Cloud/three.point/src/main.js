@@ -18,7 +18,7 @@ var point = {
      */
     init_camera: function () {
         "use strict";
-        var field_of_view = 200,
+        var field_of_view = 90,
             aspect_ratio  = this.HEIGHT / this.WIDTH,
             near_plane    = 0.1,
             far_plane     = 1000;
@@ -83,8 +83,10 @@ var point = {
         vertex.z = z;
 
         this.geometry.vertices.push(vertex);
+    },
 
-        var material = new THREE.PointCloudMaterial({size: size});
+    disp: function () {
+        var material = new THREE.PointCloudMaterial({size: 2});
         var particle = new THREE.PointCloud(this.geometry, material);
 
         return this.scene.add(particle);
@@ -99,16 +101,18 @@ var point = {
 };
 
 point.init();
-point.set_camera_position({z: -20});
-
-
-
-for (var i = 0; i < b.length - 150; i += 1) {
-    for (var j = 0; j < b[i].length - 150; j += 1) {
-        point.append_point(i, j, b[i][j], 1, 0xffffff);
+point.set_camera_position({x: 0, y: 0, z: -300});
+$.getJSON("dataset/pmd-chair/f_1_dist.json", function (b) {
+    for (var i = 0; i < b.length; i += 1) {
+        for (var j = 0; j < b[i].length; j += 1) {
+            point.append_point(i, j, b[i][j], 1, 0xffffff);
+        }
     }
-}
+    point.camera.lookAt(point.scene.position);
 
-point.render();
+    point.disp();
+    point.render();
+});
+
 
 
