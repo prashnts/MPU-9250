@@ -69,5 +69,7 @@ eagle.epf
 *.eps
 
 .DS_Store
+**/.DS_Store
+
 tof-confidence-data
 bower_components
