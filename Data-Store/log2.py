@@ -2,7 +2,7 @@
 import SocketServer
 from struct import *
 
-PORTNO = 8000
+PORTNO = 10552
 
 class handler(SocketServer.DatagramRequestHandler):
     def handle(self):
