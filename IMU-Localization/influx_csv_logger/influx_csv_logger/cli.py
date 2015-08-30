@@ -3,6 +3,7 @@
 
 import click
 import json
+import signal
 import socketserver
 from itertools import cycle
 from influxdb import InfluxDBClient
@@ -94,15 +95,30 @@ def write_to_influx(dat):
     ]
     client.write_points(json_body)
 
+def gather_class():
+    """
+    Updates the global data class and sample rate methods.
+    """
+    global data_class_global, sample_rate_global
+    data_class_global = click.prompt('Please enter the data class', type=str)
+    sample_rate_global = click.prompt('Please enter the sampling rate of the device', type=str)
+
+    if click.confirm('Proceed?'):
+        return
+    else:
+        gather_class()
+
 class UDP_Retrieve(socketserver.DatagramRequestHandler):
     column_headers_default = "Timestamp,Accel_X,Accel_Y,Accel_Z,Roll,Pitch,Yaw,Quat.X,Quat.Y,Quat.Z,Quat.W,RM11,RM12,RM13,RM21,RM22,RM23,RM31,RM32,RM33,GravAcc_X,GravAcc_Y,GravAcc_Z,UserAcc_X,UserAcc_Y,UserAcc_Z,RotRate_X,RotRate_Y,RotRate_Z,MagHeading,TrueHeading,HeadingAccuracy,MagX,MagY,MagZ,Lat,Long,LocAccuracy,Course,Speed,Altitude"
 
     def handle(self):
-        data = self.get_dict(self.rfile.readline().rstrip().decode())
-        write_to_influx(data)
-
-        inf = click.style("[LOGGING UDP DATA] {0}".format(next(progress_pool)), fg = 'cyan')
-        click.secho('\r{0}'.format(inf), nl = False)
+        try:
+            data = self.get_dict(self.rfile.readline().rstrip().decode())
+            write_to_influx(data)
+            inf = click.style("[LOGGING UDP DATA] {0}".format(next(progress_pool)), fg = 'cyan')
+            click.secho('\r{0}'.format(inf), nl = False)
+        except ValueError:
+            pass
 
     def get_dict(self, data):
         column_data = data.split(",")
@@ -114,34 +130,49 @@ class UDP_Retrieve(socketserver.DatagramRequestHandler):
 
         return dict()
 
-@click.command()
-@click.option('--data_class',  '-c', type=str, help='Data Class')
-@click.option('--sample_rate', '-s', type=str, help='Sampling Rate of the Sensor')
-@click.argument('input_file', type=click.File('r'))
-def csv_to_influx(input_file, sample_rate, data_class):
-    """Logs CSV data into Influx DB."""
-    global client, sample_rate_global, data_class_global
-    sample_rate_global = sample_rate
-    data_class_global  = data_class
+# @click.group()
+# @click.argument('input_file', type=click.File('r'))
+# def csv_to_influx(input_file):
+#     """Logs CSV data into Influx DB."""
+#     global client
+
+#     client = InfluxDBClient('localhost', 8086, 'root', 'root', 'imu_data')
+
+#     click.secho("[INF] ", fg = 'cyan', nl = False)
+#     click.secho("Parsing the CSV.")
+
+#     data = CSV_parse_to_dict(input_file)
+
+#     click.secho("[INF] ", fg = 'cyan', nl = False)
+#     click.secho("Logging the data.")
+
+#     for dat in data:
+#         write_to_influx(dat)
+
+#         inf = click.style("[LOGGING DATA] {0}".format(next(progress_pool)), fg = 'cyan')
+#         click.secho('\r{0}'.format(inf), nl = False)
+
+#     click.echo("")
+#     click.secho("[INF] ", fg = 'cyan', nl = False)
+#     click.secho("Done logging data.")
+
+@click.group()
+@click.pass_context
+def main(ctx):
+    print("Beginning Data Loggine")
+
+@main.command()
+@click.option('--port_number', '-p', type=int, required=True, help='UDP Cast Port Number')
+def udp(port_number):
+    """
+    Begins the UDP
+    """
+    global client
     client = InfluxDBClient('localhost', 8086, 'root', 'root', 'imu_data')
-
-    click.secho("[INF] ", fg = 'cyan', nl = False)
-    click.secho("Parsing the CSV.")
-
-    data = CSV_parse_to_dict(input_file)
-
-    click.secho("[INF] ", fg = 'cyan', nl = False)
-    click.secho("Logging the data.")
-
-    for dat in data:
-        write_to_influx(dat)
-
-        inf = click.style("[LOGGING DATA] {0}".format(next(progress_pool)), fg = 'cyan')
-        click.secho('\r{0}'.format(inf), nl = False)
-
-    click.echo("")
-    click.secho("[INF] ", fg = 'cyan', nl = False)
-    click.secho("Done logging data.")
+    udp_client = socketserver.UDPServer(('',port_number), UDP_Retrieve)
+    gather_class()
+    click.echo("Waiting for data.")
+    udp_client.serve_forever()
 
 if __name__ == "__main__":
-    csv_to_influx()
+    main()
