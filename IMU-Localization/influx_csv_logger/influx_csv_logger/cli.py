@@ -216,6 +216,39 @@ class UDP_Test_Motion(UDP_Test):
             dat['MagZ']      if 'MagZ'      in dat else 0.0
         ]
 
+class UDP_Test_Orientation(UDP_Test):
+    def handle(self):
+        """
+        This method is called on every UDP packets that are recieved.
+        """
+        try:
+            data = self.get_dict(self.rfile.readline().rstrip().decode())
+            self.buffered_dat.append(self.transform_dat_motion(data))
+
+            if len(self.buffered_dat) == 6:
+                point = Helper.combine_nine(self.buffered_dat)
+                self.cl_predict = support_vector_classifier.predict(point)
+                self.buffered_dat[:] = []
+                click.echo("Motion Class:{0}".format(Helper.translate_orientation(self.cl_predict)))
+
+        except ValueError:
+            print(":(")
+            pass
+        pass
+
+    def transform_dat_motion(self, dat):
+        """
+        """
+        return [
+            dat['Accel_X']   if 'Accel_X'   in dat else 0.0,
+            dat['Accel_Y']   if 'Accel_Y'   in dat else 0.0,
+            dat['Accel_Z']   if 'Accel_Z'   in dat else 0.0,
+            dat['MagX']      if 'MagX'      in dat else 0.0,
+            dat['MagY']      if 'MagY'      in dat else 0.0,
+            dat['MagZ']      if 'MagZ'      in dat else 0.0
+        ]
+
+
 class Helper(object):
     def mean(dat):
         return sum(dat) / len(dat)
@@ -227,6 +260,12 @@ class Helper(object):
             out.append(Helper.mean([_[ax] for _ in dat]))
 
         return out
+
+    def combine_six(dat):
+        """
+        Combines the 6 Hz 6 Axis Data Chunk to one <6> vector.
+        """
+        return list(map(Helper.mean, zip(*dat)))
 
     def combine_nine(dat):
         """
@@ -240,6 +279,13 @@ class Helper(object):
         overlapped_chunks = list(zip(*[dat[_:] for _ in range(6)]))[0::2]
 
         return [Helper.combine(_) for _ in overlapped_chunks]
+
+    def generate_features_six(dat):
+        """
+        """
+        overlapped_chunks = list(zip(*[dat[_:] for _ in range(6)]))[0::4]
+
+        return [Helper.combine_six(_) for _ in overlapped_chunks]
 
     def generate_features_nine(dat):
         """
@@ -267,6 +313,15 @@ class Helper(object):
             "Walkn",
             "Runng",
             "Stany",
+        ][id]
+
+    def translate_orientation(id):
+        """
+        """
+        return [
+            "Unknw",
+            "Upwar",
+            "Downw",
         ][id]
 
 @click.group()
@@ -445,6 +500,80 @@ def svm_motion_test(pickle_svm_object, kernel = 'poly', degree = 2):
     pickle.dump(support_vector_classifier, pickle_svm_object)
 
 @main.command()
+@click.option('--kernel', '-k', type=str, help='SVC Kernel')
+@click.option('--degree', '-d', type=int, help='SVC Degree (Only for Polynomial)')
+@click.argument('pickle_svm_object', type=click.File('wb'))
+def svm_orientation_test_naive(pickle_svm_object, kernel = 'poly', degree = 2):
+    """
+    Trains a SVM object with the Orientation Data. Tries to figure out if it is Facing Up or Facing Down.
+
+    Feature Vector:
+
+        6Hz chunk of a 30Hz sample (6 Dimensional Vector)
+        [mean(accelerometer_x), mean(accelerometer_y), mean(accelerometer_z),
+         mean(magnetometer_x),  mean(magnetometer_y),  mean(magnetometer_z)]
+
+    Vector Sampling:
+
+        The chunks are chosen such that they may overlap a few times.
+        This will increase redundancy, but will make sure that a random sample length of size 6 is always accounted for.
+
+    Class Labels:
+
+        The definition is:
+        1 -> Upwards, 2 -> Downwards
+    """
+    global client, support_vector_classifier
+    client = InfluxDBClient('localhost', 8086, 'root', 'root', 'imu_data')
+
+    # Retrieve data from the InfluxDB
+    r_accel_up = list(client.query("SELECT x, y, z FROM accelerometer WHERE mmt_class='orien_test_up';"))[0]
+    #r_gyro_walk  = list(client.query("SELECT x, y, z FROM gyroscope WHERE mmt_class='walking_stationary';"))[0]
+    r_magne_up = list(client.query("SELECT x, y, z FROM magnetometer WHERE mmt_class='orien_test_up';"))[0]
+
+    r_accel_down = list(client.query("SELECT x, y, z FROM accelerometer WHERE mmt_class='orien_test_down';"))[0]
+    #r_gyro_run  = list(client.query("SELECT x, y, z FROM gyroscope WHERE mmt_class='running_stationary';"))[0]
+    r_magne_down = list(client.query("SELECT x, y, z FROM magnetometer WHERE mmt_class='orien_test_down';"))[0]
+
+    #r_accel_stat = list(client.query("SELECT x, y, z FROM accelerometer WHERE mmt_class='stationary_stationary';"))[0]
+    #r_gyro_stat  = list(client.query("SELECT x, y, z FROM gyroscope WHERE mmt_class='stationary_stationary';"))[0]
+    #r_magne_stat = list(client.query("SELECT x, y, z FROM magnetometer WHERE mmt_class='stationary_stationary';"))[0]
+
+    def combine(a, b):
+        """
+        Helper method that combines the sensor data in a <6> Vector.
+        """
+        bound = min([len(a), len(b)])
+
+        for i in range(0, bound):
+            dat = a[0]
+            yield [a[i]['x'], a[i]['y'], a[i]['z'],
+                   b[i]['x'], b[i]['y'], b[i]['z']]
+
+    r_up   = list(combine(r_accel_up, r_magne_up))
+    r_down = list(combine(r_accel_down, r_magne_down))
+
+    X = []
+    Y = []
+
+    lower_bound = 20
+    upper_bound = min([len(r_up), len(r_down)])
+
+    print(upper_bound)
+
+    X += Helper.generate_features_nine(r_up[lower_bound:upper_bound])
+    size = len(X)
+    Y += [1] * size
+
+    X += Helper.generate_features_nine(r_down[lower_bound:upper_bound])
+    Y += [2] * size
+
+    support_vector_classifier = SVC(kernel = kernel, degree = degree)
+    support_vector_classifier.fit(X, Y)
+
+    pickle.dump(support_vector_classifier, pickle_svm_object)
+
+@main.command()
 @click.option('--port_number', '-p', type=int, required=True, help='UDP Cast Port Number')
 @click.argument('pickled_svm_object', type=click.File('rb'))
 def udp_test_directional(pickled_svm_object, port_number):
@@ -465,6 +594,18 @@ def udp_test_motion(pickled_svm_object, port_number):
     support_vector_classifier = pickle.load(pickled_svm_object)
 
     udp_client = socketserver.UDPServer(('',port_number), UDP_Test_Motion)
+    click.echo("Waiting for data.")
+    udp_client.serve_forever()
+
+@main.command()
+@click.option('--port_number', '-p', type=int, required=True, help='UDP Cast Port Number')
+@click.argument('pickled_svm_object', type=click.File('rb'))
+def udp_test_orientation(pickled_svm_object, port_number):
+    global support_vector_classifier
+
+    support_vector_classifier = pickle.load(pickled_svm_object)
+
+    udp_client = socketserver.UDPServer(('',port_number), UDP_Test_Orientation)
     click.echo("Waiting for data.")
     udp_client.serve_forever()
 
