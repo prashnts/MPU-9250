@@ -242,12 +242,8 @@ class UDP_Test_Orientation(UDP_Test):
         return [
             dat['Accel_X']   if 'Accel_X'   in dat else 0.0,
             dat['Accel_Y']   if 'Accel_Y'   in dat else 0.0,
-            dat['Accel_Z']   if 'Accel_Z'   in dat else 0.0,
-            dat['MagX']      if 'MagX'      in dat else 0.0,
-            dat['MagY']      if 'MagY'      in dat else 0.0,
-            dat['MagZ']      if 'MagZ'      in dat else 0.0
+            dat['Accel_Z']   if 'Accel_Z'   in dat else 0.0
         ]
-
 
 class Helper(object):
     def mean(dat):
@@ -509,9 +505,8 @@ def svm_orientation_test_naive(pickle_svm_object, kernel = 'poly', degree = 2):
 
     Feature Vector:
 
-        6Hz chunk of a 30Hz sample (6 Dimensional Vector)
-        [mean(accelerometer_x), mean(accelerometer_y), mean(accelerometer_z),
-         mean(magnetometer_x),  mean(magnetometer_y),  mean(magnetometer_z)]
+        6Hz chunk of a 30Hz sample (3 Dimensional Vector)
+        [mean(accelerometer_x), mean(accelerometer_y), mean(accelerometer_z)]
 
     Vector Sampling:
 
@@ -528,30 +523,20 @@ def svm_orientation_test_naive(pickle_svm_object, kernel = 'poly', degree = 2):
 
     # Retrieve data from the InfluxDB
     r_accel_up = list(client.query("SELECT x, y, z FROM accelerometer WHERE mmt_class='orien_test_up';"))[0]
-    #r_gyro_walk  = list(client.query("SELECT x, y, z FROM gyroscope WHERE mmt_class='walking_stationary';"))[0]
-    r_magne_up = list(client.query("SELECT x, y, z FROM magnetometer WHERE mmt_class='orien_test_up';"))[0]
-
     r_accel_down = list(client.query("SELECT x, y, z FROM accelerometer WHERE mmt_class='orien_test_down';"))[0]
-    #r_gyro_run  = list(client.query("SELECT x, y, z FROM gyroscope WHERE mmt_class='running_stationary';"))[0]
-    r_magne_down = list(client.query("SELECT x, y, z FROM magnetometer WHERE mmt_class='orien_test_down';"))[0]
 
-    #r_accel_stat = list(client.query("SELECT x, y, z FROM accelerometer WHERE mmt_class='stationary_stationary';"))[0]
-    #r_gyro_stat  = list(client.query("SELECT x, y, z FROM gyroscope WHERE mmt_class='stationary_stationary';"))[0]
-    #r_magne_stat = list(client.query("SELECT x, y, z FROM magnetometer WHERE mmt_class='stationary_stationary';"))[0]
-
-    def combine(a, b):
+    def combine(a):
         """
         Helper method that combines the sensor data in a <6> Vector.
         """
-        bound = min([len(a), len(b)])
+        bound = len(a)
 
         for i in range(0, bound):
             dat = a[0]
-            yield [a[i]['x'], a[i]['y'], a[i]['z'],
-                   b[i]['x'], b[i]['y'], b[i]['z']]
+            yield [a[i]['x'], a[i]['y'], a[i]['z']]
 
-    r_up   = list(combine(r_accel_up, r_magne_up))
-    r_down = list(combine(r_accel_down, r_magne_down))
+    r_up   = list(combine(r_accel_up))
+    r_down = list(combine(r_accel_down))
 
     X = []
     Y = []
@@ -581,7 +566,7 @@ def udp_test_directional(pickled_svm_object, port_number):
 
     support_vector_classifier = pickle.load(pickled_svm_object)
 
-    udp_client = socketserver.UDPServer(('',port_number), UDP_Test)
+    udp_client = socketserver.UDPServer(('',port_number), UDP_Test_Motion)
     click.echo("Waiting for data.")
     udp_client.serve_forever()
 
@@ -608,6 +593,11 @@ def udp_test_orientation(pickled_svm_object, port_number):
     udp_client = socketserver.UDPServer(('',port_number), UDP_Test_Orientation)
     click.echo("Waiting for data.")
     udp_client.serve_forever()
+
+class HelperPeriodic(object):
+    """
+    Provides the helper functions where the Periodic Properties of the raw data is preserved. 
+    """
 
 if __name__ == "__main__":
     main()
