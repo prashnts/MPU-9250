@@ -10,6 +10,7 @@ import functools
 from itertools import cycle
 from influxdb import InfluxDBClient
 from sklearn.svm import SVC
+from scipy.optimize import curve_fit
 
 progress_pool = cycle(["_  ", "__ ", "___"])
 client = None
@@ -596,8 +597,24 @@ def udp_test_orientation(pickled_svm_object, port_number):
 
 class HelperPeriodic(object):
     """
-    Provides the helper functions where the Periodic Properties of the raw data is preserved. 
+    Provides the helper functions where the Periodic Properties of the raw data is preserved.
     """
+
+    def fit_function_parameters(self, func, value_points):
+        """
+        Fits the parameters of the `function` with the real value points.
+        It disregards the "x" part of data, because that, in our case is irrelevant, rather the order of the data is important here. So, the function re-maps the positional values to x values, and uses the y value points as the y values.
+        The curve fit is proxied over to the scipy's cure fit function.
+
+        Args:
+            func (function): The function class. This returns a singular value and has the functional parameters as its arguments.
+            value_points (list): List of float values, presumably the `real` function values.
+
+        Returns:
+            list: List of float values, each corresponding to the functional parameter of the `func`.
+        """
+
+        pass
 
 if __name__ == "__main__":
     main()
