@@ -614,7 +614,12 @@ class HelperPeriodic(object):
             list: List of float values, each corresponding to the functional parameter of the `func`.
         """
 
-        pass
+        x_points = list(range(len(value_points)))
+
+        coeff, fit = curve_fit(func, x_points, value_points)
+
+        return coeff
 
 if __name__ == "__main__":
-    main()
+    #main()
+    
