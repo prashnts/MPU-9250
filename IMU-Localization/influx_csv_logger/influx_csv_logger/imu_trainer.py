@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 
 """
-
 """
 
+import click
 import socketserver
 import json
 from influxdb import InfluxDBClient
@@ -179,7 +179,7 @@ class DataPreprocessor(object):
         """
         pass
 
-class UDPGet(socketserver.DatagramRequestHandler):
+class UDP(socketserver.DatagramRequestHandler):
     """
     Retrieves and Logs the UDP Datagram packets through local Broadcast to the InfluxDB instance.
     Extends the socketserver class.
@@ -206,26 +206,42 @@ class UDPGet(socketserver.DatagramRequestHandler):
         On every received data, the callable, `self.data_handler` is called with the data.
         """
         try:
-            if not self.handler:
+            if not UDP.handler:
                 raise
             else:
                 data = self._transform_dict(self.rfile.readline().rstrip().decode())
-                UDPGet.handler(dat = data)
+                UDP.handler(dat = data)
         except ValueError:
-            #self.value_error_count += 1
             pass
 
     @staticmethod
     def register_handler(func):
-        UDPGet.handler = func
+        """
+        Decorator function, registers data handler.
+        """
+        UDP.handler = func
 
     @staticmethod
-    def start_routine():
-        c = socketserver.UDPServer(('', 10552), UDPGet)
+    def start_routine(hostname, port):
+        """
+        Helper function that starts the routine.
+        """
+        c = socketserver.UDPServer((hostname, port), UDP)
         c.serve_forever()
 
-@UDPGet.register_handler
-def lol(**kwargs):
-    print(":(", kwargs)
+UDPGet.start_routine('', 10552)
 
-UDPGet.start_routine()
+@click.group()
+@click.pass_context
+def main(ctx):
+    """
+    """
+    print("Beginning Data Logging")
+
+@main.command
+@main.option('--port', '-p',
+             type = int,
+             required = true,
+             help = "LOL"
+             )
+def log_udp(port)
