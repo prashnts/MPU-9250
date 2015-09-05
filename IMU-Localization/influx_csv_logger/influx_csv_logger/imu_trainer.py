@@ -229,7 +229,21 @@ class UDP(socketserver.DatagramRequestHandler):
         c = socketserver.UDPServer((hostname, port), UDP)
         c.serve_forever()
 
-UDPGet.start_routine('', 10552)
+class Helper(object):
+    """
+    """
+
+    @staticmethod
+    def gather_class():
+        """
+        Gathers the Motion Class from User.
+        """
+        data_class_global = click.prompt('Motion Class Tag', type=str)
+
+        if click.confirm('Proceed?'):
+            return
+        else:
+            gather_class()
 
 @click.group()
 @click.pass_context
@@ -240,8 +254,16 @@ def main(ctx):
 
 @main.command
 @main.option('--port', '-p',
-             type = int,
-             required = true,
-             help = "LOL"
-             )
-def log_udp(port)
+    type = int,
+    required = true,
+    prompt = true,
+    help = "UDP Broadcast Port Number"
+)
+def log_udp(port):
+    mmt_class = Helper.gather_class()
+
+    
+
+    pass
+
+
