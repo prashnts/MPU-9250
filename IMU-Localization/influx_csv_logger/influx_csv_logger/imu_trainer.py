@@ -5,6 +5,7 @@
 
 """
 
+import socketserver
 import json
 from influxdb import InfluxDBClient
 
@@ -151,9 +152,16 @@ class Influx(object):
         out = self._measurement(name, kwargs).get_points()
         return self._flatten(out)
 
+class DataPreprocessor(object):
+    """
+    Handles the Data
+    """
+
     def concatenate(self, measurements):
         """
         Concatenates the measurements taken here.
+        Example: concatenate(zip([[x1], [x2] ... ], [[y1], [y2], ...]))
+                 returns [[x1, y1], [x2, y2], ...]
         Args:
             measurements (zip): A zip concatenation of the measurements.
         Returns:
@@ -177,13 +185,20 @@ class UDPGet(socketserver.DatagramRequestHandler):
     Extends the socketserver class.
     """
 
-    #: str: Default Column Header pattern of the Datagram
-    column_headers_default = "Timestamp,Accel_X,Accel_Y,Accel_Z,Roll,Pitch,Yaw,Quat.X,Quat.Y,Quat.Z,Quat.W,RM11,RM12,RM13,RM21,RM22,RM23,RM31,RM32,RM33,GravAcc_X,GravAcc_Y,GravAcc_Z,UserAcc_X,UserAcc_Y,UserAcc_Z,RotRate_X,RotRate_Y,RotRate_Z,MagHeading,TrueHeading,HeadingAccuracy,MagX,MagY,MagZ,Lat,Long,LocAccuracy,Course,Speed,Altitude"
+    # There's no prettier way.
+    #: (str) Pattern of the 
+    COL_HEAD = "Timestamp,Accel_X,Accel_Y,Accel_Z,Roll,Pitch,Yaw,Quat.X,Quat.Y,Quat.Z,Quat.W,RM11,RM12,RM13,RM21,RM22,RM23,RM31,RM32,RM33,GravAcc_X,GravAcc_Y,GravAcc_Z,UserAcc_X,UserAcc_Y,UserAcc_Z,RotRate_X,RotRate_Y,RotRate_Z,MagHeading,TrueHeading,HeadingAccuracy,MagX,MagY,MagZ,Lat,Long,LocAccuracy,Course,Speed,Altitude".split(",")
 
-    def __init__(self, data_handler):
+    def _transform_dict(self, data):
         """
+        Creates a Dictionary of the incoming UDP data string.
         """
-        self.data_handler = data_handler
+        column_data = data.split(",")
+
+        if len(column_data) == len(self.COL_HEAD):
+            return {self.COL_HEAD[_]: float(column_data[_]) for _ in range(0, len(self.COL_HEAD))}
+
+        return dict()
 
     def handle(self):
         """
@@ -191,26 +206,26 @@ class UDPGet(socketserver.DatagramRequestHandler):
         On every received data, the callable, `self.data_handler` is called with the data.
         """
         try:
-            data = self._transform_dict(self.rfile.readline().rstrip().decode())
-            self.data_handler(data)
+            if not self.handler:
+                raise
+            else:
+                data = self._transform_dict(self.rfile.readline().rstrip().decode())
+                UDPGet.handler(dat = data)
         except ValueError:
-            self.value_error_count += 1
+            #self.value_error_count += 1
+            pass
 
-    def _transform_dict(self, data):
-        """
-        Creates a Dictionary of the incoming UDP data string.
-        """
-        column_data = data.split(",")
-        column_headers = self.column_headers_default.split(",")
+    @staticmethod
+    def register_handler(func):
+        UDPGet.handler = func
 
-        if len(column_data) == len(column_headers):
-            dat_map = {column_headers[_]: float(column_data[_]) for _ in range(0, len(column_headers))}
-            return dat_map
-        return dict()
+    @staticmethod
+    def start_routine():
+        c = socketserver.UDPServer(('', 10552), UDPGet)
+        c.serve_forever()
 
-a = Influx()
-b = a.probe("accelerometer", tag = "walking_stationary", time_lower = '2015-08-31T08:01:01.21659282Z', time_upper = '2015-08-31T08:02:48.22270603Z')
-c = a.probe("gyroscope", tag = "walking_stationary", time_lower = '2015-08-31T08:01:01.21659282Z', time_upper = '2015-08-31T08:02:48.22270603Z')
-e = a.probe("magnetometer", tag = "walking_stationary", time_lower = '2015-08-31T08:01:01.21659282Z', time_upper = '2015-08-31T08:02:48.22270603Z')
+@UDPGet.register_handler
+def lol(**kwargs):
+    print(":(", kwargs)
 
-print(list(a.concatenate(zip(b, c, e)))[0])
+UDPGet.start_routine()
