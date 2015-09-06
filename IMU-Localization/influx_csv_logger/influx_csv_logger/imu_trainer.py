@@ -226,7 +226,7 @@ class Helper(object):
     """
 
     #: (cycle) A circular queue to show progress.
-    pool = cycle(["_  ", "__ ", "___"])
+    pool = cycle(["😀  ", "😃  ", "😄  "])
 
     @staticmethod
     def gather_class():
@@ -264,6 +264,18 @@ class Helper(object):
         Features are calculated out of a series of values.
         """
         pass
+
+class Routines(object):
+    """
+    Collations of multiple training Routines.
+    """
+
+    class WalkingStationary(object):
+        def feature(data):
+            pass
+
+        def train(data):
+            pass
 
 @click.group()
 @click.pass_context
@@ -325,12 +337,7 @@ def debug():
     Debug commands.
     """
 
-    cli = Influx()
-
-    a = cli.probe('accelerometer')
-
-    for i in a:
-        print(i)
+    print(locals())
 
 if __name__ == "__main__":
     main()
