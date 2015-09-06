@@ -7,6 +7,11 @@
 import click
 import socketserver
 import json
+import pickle
+
+from sklearn.svm import SVC
+from scipy.optimize import curve_fit
+from itertools import cycle
 from influxdb import InfluxDBClient
 
 class Influx(object):
@@ -89,6 +94,9 @@ class Influx(object):
         Args:
             dat (dict): Data dictionary. The missing fields are auto set to float(0)
         """
+        xyz = ['x', 'y', 'z']
+        ypr = ['yaw', 'pitch', 'roll']
+
         json_body = [
             {
                 "measurement": "accelerometer",
@@ -96,9 +104,7 @@ class Influx(object):
                     "mmt_class": data_class
                 },
                 "fields": {
-                    "x": dat['Accel_X'] if 'Accel_X' in dat else 0.0,
-                    "y": dat['Accel_Y'] if 'Accel_Y' in dat else 0.0,
-                    "z": dat['Accel_Z'] if 'Accel_Z' in dat else 0.0
+                    _: __ for (_, __) in zip(xyz, dat['accelerometer'])
                 }
             },
             {
@@ -107,9 +113,7 @@ class Influx(object):
                     "mmt_class": data_class
                 },
                 "fields": {
-                    "x": dat['RotRate_X'] if 'RotRate_X' in dat else 0.0,
-                    "y": dat['RotRate_Y'] if 'RotRate_Y' in dat else 0.0,
-                    "z": dat['RotRate_Z'] if 'RotRate_Z' in dat else 0.0
+                    _: __ for (_, __) in zip(xyz, dat['gyroscope'])
                 }
             },
             {
@@ -118,9 +122,7 @@ class Influx(object):
                     "mmt_class": data_class
                 },
                 "fields": {
-                    "x": dat['MagX'] if 'MagX' in dat else 0.0,
-                    "y": dat['MagY'] if 'MagY' in dat else 0.0,
-                    "z": dat['MagZ'] if 'MagZ' in dat else 0.0
+                    _: __ for (_, __) in zip(xyz, dat['magnetometer'])
                 }
             },
             {
@@ -129,12 +131,11 @@ class Influx(object):
                     "mmt_class": data_class
                 },
                 "fields": {
-                    "roll"  : dat['Roll']  if 'Roll'  in dat else 0.0,
-                    "pitch" : dat['Pitch'] if 'Pitch' in dat else 0.0,
-                    "yaw"   : dat['Yaw']   if 'Yaw'   in dat else 0.0
+                    _: __ for (_, __) in zip(ypr, dat['ahrs'])
                 }
             }
         ]
+
         self.client.write_points(json_body)
 
     def probe(self, name, *args, **kwargs):
@@ -151,33 +152,6 @@ class Influx(object):
         """
         out = self._measurement(name, kwargs).get_points()
         return self._flatten(out)
-
-class DataPreprocessor(object):
-    """
-    Handles the Data
-    """
-
-    def concatenate(self, measurements):
-        """
-        Concatenates the measurements taken here.
-        Example: concatenate(zip([[x1], [x2] ... ], [[y1], [y2], ...]))
-                 returns [[x1, y1], [x2, y2], ...]
-        Args:
-            measurements (zip): A zip concatenation of the measurements.
-        Returns:
-            generator: Generator instance containing the place wise concatenation of the measurements.
-        """
-        for i in measurements:
-            result = []
-            for j in i:
-                for k in j:
-                    result.append(k)
-            yield result
-
-    def feature(self, transform_function, measurements):
-        """
-        """
-        pass
 
 class UDP(socketserver.DatagramRequestHandler):
     """
@@ -200,6 +174,25 @@ class UDP(socketserver.DatagramRequestHandler):
 
         return dict()
 
+    def probe(self):
+        """
+        Translates the dict to standard probe data.
+        """
+
+        data = self._transform_dict(self.rfile.readline().rstrip().decode())
+
+        acce = ['Accel_X', 'Accel_Y', 'Accel_Z']
+        gyro = ['RotRate_X', 'RotRate_Y', 'RotRate_Z']
+        magn = ['MagX', 'MagY', 'MagZ']
+        ahrs = ['Roll', 'Pitch', 'Yaw']
+
+        return {
+            'accelerometer': [data[_] for _ in acce],
+            'gyroscope':     [data[_] for _ in gyro],
+            'magnetometer':  [data[_] for _ in magn],
+            'ahrs':          [data[_] for _ in ahrs]
+        }
+
     def handle(self):
         """
         This method is called on every UDP packets that are recieved.
@@ -209,8 +202,7 @@ class UDP(socketserver.DatagramRequestHandler):
             if not UDP.handler:
                 raise
             else:
-                data = self._transform_dict(self.rfile.readline().rstrip().decode())
-                UDP.handler(dat = data)
+                UDP.handler(dat = self.probe())
         except ValueError:
             pass
 
@@ -233,24 +225,52 @@ class Helper(object):
     """
     """
 
+    #: (cycle) A circular queue to show progress.
+    pool = cycle(["_  ", "__ ", "___"])
+
     @staticmethod
     def gather_class():
         """
         Gathers the Motion Class from User.
         """
-        data_class_global = click.prompt('Motion Class Tag', type=str)
+        data_class_global = click.prompt('Motion Class Tag', type = str)
 
         if click.confirm('Proceed?'):
             return data_class_global
         else:
             gather_class()
 
+    @staticmethod
+    def concatenate(measurements):
+        """
+        Concatenates the measurements taken here.
+        Example: concatenate(zip([[x1], [x2] ...], [[y1], [y2], ...]))
+                 returns [[x1, y1], [x2, y2], ...]
+        Args:
+            measurements (zip): A zip concatenation of the measurements.
+        Returns:
+            generator: Generator instance containing the place wise concatenation of the measurements.
+        """
+        for i in measurements:
+            result = []
+            for j in i:
+                for k in j:
+                    result.append(k)
+            yield result
+
+    @staticmethod
+    def feature(transform_function, measurements):
+        """
+        Features are calculated out of a series of values.
+        """
+        pass
+
 @click.group()
 @click.pass_context
 def main(ctx):
     """
     """
-    print("Beginning Data Logging")
+    pass
 
 @main.command()
 @click.option('--port', '-p',
@@ -260,6 +280,9 @@ def main(ctx):
     help = "UDP Broadcast Port Number"
 )
 def log_udp(port):
+    """
+    Logs the raw sensor data incoming through UDP in the InfluxDB.
+    """
     mmt_class = Helper.gather_class()
 
     influx_client = Influx()
@@ -268,8 +291,46 @@ def log_udp(port):
     def put_in(**kwargs):
         if 'dat' in kwargs:
             influx_client.write(kwargs['dat'], mmt_class)
+            click.secho('\rLogging: {0}'.format(next(Helper.pool)), nl = False)
 
     UDP.start_routine('', port)
+
+@main.command()
+@click.option('--port', '-p',
+    type = int,
+    required = True,
+    prompt = True,
+    help = "UDP Broadcast Port Number"
+)
+@click.argument('pickled', type = click.File('r'))
+def test(pickled, port):
+    """
+    """
+
+    classifier = pickle.load(pickled)
+
+    dat = []
+
+    @UDP.handler
+    def svm_test(**kwargs):
+        global dat
+
+        pass
+
+    UDP.start_routine('', port)
+
+@main.command()
+def debug():
+    """
+    Debug commands.
+    """
+
+    cli = Influx()
+
+    a = cli.probe('accelerometer')
+
+    for i in a:
+        print(i)
 
 if __name__ == "__main__":
     main()
