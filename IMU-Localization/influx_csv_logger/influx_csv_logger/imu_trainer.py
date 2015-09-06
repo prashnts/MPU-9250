@@ -93,7 +93,7 @@ class Influx(object):
             {
                 "measurement": "accelerometer",
                 "tags": {
-                    "mmt_class": data_class,
+                    "mmt_class": data_class
                 },
                 "fields": {
                     "x": dat['Accel_X'] if 'Accel_X' in dat else 0.0,
@@ -104,7 +104,7 @@ class Influx(object):
             {
                 "measurement": "gyroscope",
                 "tags": {
-                    "mmt_class": data_class,
+                    "mmt_class": data_class
                 },
                 "fields": {
                     "x": dat['RotRate_X'] if 'RotRate_X' in dat else 0.0,
@@ -115,7 +115,7 @@ class Influx(object):
             {
                 "measurement": "magnetometer",
                 "tags": {
-                    "mmt_class": data_class,
+                    "mmt_class": data_class
                 },
                 "fields": {
                     "x": dat['MagX'] if 'MagX' in dat else 0.0,
@@ -126,7 +126,7 @@ class Influx(object):
             {
                 "measurement": "ahrs",
                 "tags": {
-                    "mmt_class": data_class,
+                    "mmt_class": data_class
                 },
                 "fields": {
                     "roll"  : dat['Roll']  if 'Roll'  in dat else 0.0,
@@ -135,7 +135,7 @@ class Influx(object):
                 }
             }
         ]
-        client.write_points(json_body)
+        self.client.write_points(json_body)
 
     def probe(self, name, *args, **kwargs):
         """
@@ -215,7 +215,7 @@ class UDP(socketserver.DatagramRequestHandler):
             pass
 
     @staticmethod
-    def register_handler(func):
+    def handler(func):
         """
         Decorator function, registers data handler.
         """
@@ -241,7 +241,7 @@ class Helper(object):
         data_class_global = click.prompt('Motion Class Tag', type=str)
 
         if click.confirm('Proceed?'):
-            return
+            return data_class_global
         else:
             gather_class()
 
@@ -252,18 +252,24 @@ def main(ctx):
     """
     print("Beginning Data Logging")
 
-@main.command
-@main.option('--port', '-p',
+@main.command()
+@click.option('--port', '-p',
     type = int,
-    required = true,
-    prompt = true,
+    required = True,
+    prompt = True,
     help = "UDP Broadcast Port Number"
 )
 def log_udp(port):
     mmt_class = Helper.gather_class()
 
-    
+    influx_client = Influx()
 
-    pass
+    @UDP.handler
+    def put_in(**kwargs):
+        if 'dat' in kwargs:
+            influx_client.write(kwargs['dat'], mmt_class)
 
+    UDP.start_routine('', port)
 
+if __name__ == "__main__":
+    main()
