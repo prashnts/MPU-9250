@@ -8,6 +8,9 @@ import click
 import socketserver
 import json
 import pickle
+import math
+import numpy as np
+import matplotlib.pyplot as plt
 
 from sklearn.svm import SVC
 from scipy.optimize import curve_fit
@@ -362,9 +365,32 @@ def debug():
 @main.command()
 @click.argument('csv', type = click.File('r'))
 def scratch(csv):
-    row = Helper.load_csv(csv)
-    for i in row:
-        print(i['x'])
+    row = list(Helper.load_csv(csv))
+    x = [_['x'] for _ in row]
+    y = [_['y'] for _ in row][60:90]
+    z = [_['z'] for _ in row][50:80]
+
+    y_avg = sum(y) / len(y)
+
+    plt.plot([y_avg] * len(y))
+
+    plt.plot(y)
+
+    def func(x, a, b, c, d):
+        return a * np.sin(b * x + c) + d
+
+    popt, pcov = curve_fit(func, list(range(0, len(y))), y)
+
+    print(popt)
+
+    y_fitted = [func(_, *popt) for _ in range(0, len(y))]
+
+    plt.plot(y_fitted)
+
+    #plt.plot(y)
+    #plt.plot(z)
+    plt.ylim((-5, 5))
+    plt.show()
     pass
 
 if __name__ == "__main__":
