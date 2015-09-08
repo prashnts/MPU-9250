@@ -262,11 +262,14 @@ class Helper(object):
             yield result
 
     @staticmethod
-    def feature(transform_function, measurements):
+    def curve_fit(transform_function, measurements):
         """
         Features are calculated out of a series of values.
         """
-        pass
+        x_values = np.array(range(0, len(measurements)))
+        popt, pcov = curve_fit(transform_function, x_values, measurements)
+
+        return list(popt)
 
     @staticmethod
     def load_csv(handle, column_delim = ","):
@@ -367,31 +370,47 @@ def debug():
 def scratch(csv):
     row = list(Helper.load_csv(csv))
     x = [_['x'] for _ in row]
-    y = [_['y'] for _ in row][60:90]
-    z = [_['z'] for _ in row][50:80]
-
-    y_avg = sum(y) / len(y)
-
-    plt.plot([y_avg] * len(y))
-
-    plt.plot(y)
+    y = [_['y'] for _ in row]
+    z = [_['z'] for _ in row]
 
     def func(x, a, b, c, d):
+        #: The fit-function
+        #: y = aSin(bx + c) + d
         return a * np.sin(b * x + c) + d
 
-    popt, pcov = curve_fit(func, list(range(0, len(y))), y)
+    #: Overlapped x, y, and z axis data.
+    #  Data length -> 16
+    x_o = zip(*[x[_:] for _ in range(16)])
+    y_o = zip(*[y[_:] for _ in range(16)])
+    z_o = zip(*[z[_:] for _ in range(16)])
 
-    print(popt)
+    #: Gathers row wise 
+    row = zip(x_o, y_o, z_o)
 
-    y_fitted = [func(_, *popt) for _ in range(0, len(y))]
+    for val_set in row:
+        ftr = []
+        f_val = []
 
-    plt.plot(y_fitted)
+        for col in val_set:
+            #: Curve fit each column to get the period, phase shift, vertical
+            #: shift, and amplitude.
+            popt = Helper.curve_fit(func, col)
+            ftr.append(popt)
 
-    #plt.plot(y)
-    #plt.plot(z)
-    plt.ylim((-5, 5))
-    plt.show()
+        plt.plot([sum(_) for _ in zip(*f_val)])
+        plt.ylim((-5, 5))
+        plt.show()
+        #break
+    """
+    for i in a:
+        popt, pcov = curve_fit(func, list(range(len(i))), i)
+        plt.plot(i)
+        fitted = [func(_, *popt) for _ in range(len(i))]
+        plt.plot(fitted)
+        plt.ylim((-5, 5))
+        plt.show()
     pass
+    """
 
 if __name__ == "__main__":
     main()
