@@ -490,8 +490,8 @@ def sep_9_1242(pickle_svm_object, kernel = 'poly', degree = 2):
 
     click.echo("😐  Loading the data from influxdb.")
 
-    static = idb.probe('accelerometer', tag = 'stationary_stationary')
-    walk   = idb.probe('accelerometer', tag = 'walking_stationary')
+    static = idb.probe('accelerometer', tag = 'static_9_sep_1534')
+    walk   = idb.probe('accelerometer', tag = 'walk_9_sep_1511')
 
     click.echo("😐  Creating features.")
 
