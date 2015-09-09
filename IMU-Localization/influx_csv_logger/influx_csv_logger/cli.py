@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 
 from sklearn.svm import SVC
 from scipy.optimize import curve_fit
+from numpy import linalg as LA
 from itertools import cycle
 from influxdb import InfluxDBClient
 
@@ -378,6 +379,10 @@ def scratch(csv):
         #: y = aSin(bx + c) + d
         return a * np.sin(b * x + c) + d
 
+    def mean(*args):
+        #: Finds the mean of arguments
+        return sum(args)/len(args)
+
     #: Overlapped x, y, and z axis data.
     #  Data length -> 16
     x_o = zip(*[x[_:] for _ in range(16)])
@@ -389,17 +394,24 @@ def scratch(csv):
 
     for val_set in row:
         ftr = []
-        f_val = []
-
         for col in val_set:
             #: Curve fit each column to get the period, phase shift, vertical
             #: shift, and amplitude.
             popt = Helper.curve_fit(func, col)
             ftr.append(popt)
 
-        plt.plot([sum(_) for _ in zip(*f_val)])
-        plt.ylim((-5, 5))
-        plt.show()
+        #: Yield a single feature, combining all of the above
+        ftr_cmb = zip(*ftr)
+
+        ampl  = next(ftr_cmb)   # Amplitude
+        phase = next(ftr_cmb)   # Phase
+        ph_sh = next(ftr_cmb)   # Phase Shift
+        ve_sh = next(ftr_cmb)   # Vertical Shift
+
+        eig_val, eig_vec = LA.eig([ampl, phase, ph_sh])
+
+        print([np.absolute(_) for _ in eig_val])
+
         #break
     """
     for i in a:
