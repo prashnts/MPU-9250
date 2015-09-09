@@ -19,6 +19,8 @@ from numpy import linalg as LA
 from itertools import cycle
 from influxdb import InfluxDBClient
 
+buffer = []
+
 class Influx(object):
     """
     Proxy for Influx DB.
@@ -518,6 +520,124 @@ def sep_9_1242(pickle_svm_object, kernel = 'poly', degree = 2):
     click.echo("😄  Dumping SVM Object.")
 
     pickle.dump(support_vector_classifier, pickle_svm_object)
+
+@main.command()
+@click.option('--port', '-p',
+    type = int,
+    required = True,
+    prompt = True,
+    help = "UDP Broadcast Port Number"
+)
+@click.argument('pickled_svm_object', type=click.File('rb'))
+def sep_9_1242_test(pickled_svm_object, port):
+    support_vector_classifier = pickle.load(pickled_svm_object)
+
+    @UDP.handler
+    def svm_test(**kwargs):
+        global buffer
+        if 'dat' in kwargs:
+            buffer.append(kwargs['dat']['accelerometer'])
+
+        if len(buffer) == 16:
+            buf_ftr = Routines.sep_9_1242_feature(zip(*buffer))
+            pred = support_vector_classifier.predict(buf_ftr)
+
+            buffer[:] = []
+
+            if pred == 1:
+                click.echo("😆  {0} Stationary".format(pred))
+
+            if pred == 2:
+                click.echo("🚶  {0} Walk".format(pred))
+
+
+    UDP.start_routine('', port)
+
+
+@main.command()
+@click.option('--kernel', '-k', type=str, help='SVC Kernel')
+@click.option('--degree', '-d', type=int, help='SVC Degree (Only for Polynomial)')
+@click.argument('pickle_svm_object', type=click.File('wb'))
+def sep_9_1448(pickle_svm_object, kernel = 'poly', degree = 2):
+    """
+    Training routine written on September 9, 2015 at 14:48.
+    Gets data tagged as `stationary_stationary`, `running_stationary`, and `walking_stationary` from influxdb.
+    Creates features through Routine Method sep_9_1242.
+    """
+
+    idb = Influx()
+
+    click.echo("😐  Loading the data from influxdb.")
+
+    static = idb.probe('accelerometer', tag = 'stationary_stationary')
+    walk   = idb.probe('accelerometer', tag = 'walking_stationary')
+    run    = idb.probe('accelerometer', tag = 'running_stationary')
+
+    click.echo("😐  Creating features.")
+
+    ftr_static = Routines.sep_9_1242(*zip(*static))
+    ftr_walk   = Routines.sep_9_1242(*zip(*walk))
+    ftr_run    = Routines.sep_9_1242(*zip(*run))
+
+    click.echo("😣  Flattening features.")
+
+    svm_static_val = list(ftr_static)
+    svm_walk_val   = list(ftr_walk)
+    svm_run_val    = list(ftr_run)
+
+    lim = min(len(svm_static_val), len(svm_walk_val), len(svm_run_val))
+
+    click.echo("😐  Concatinating features.")
+
+    X = svm_static_val[:lim]
+    Y = [1] * lim
+    X += svm_walk_val[:lim]
+    Y += [2] * lim
+    X += svm_run_val[:lim]
+    Y += [3] * lim
+
+    click.echo("😏  Training SVM.")
+
+    support_vector_classifier = SVC(kernel = kernel, degree = degree)
+    support_vector_classifier.fit(X, Y)
+
+    click.echo("😄  Dumping SVM Object.")
+
+    pickle.dump(support_vector_classifier, pickle_svm_object)
+
+@main.command()
+@click.option('--port', '-p',
+    type = int,
+    required = True,
+    prompt = True,
+    help = "UDP Broadcast Port Number"
+)
+@click.argument('pickled_svm_object', type=click.File('rb'))
+def sep_9_1448_test(pickled_svm_object, port):
+    support_vector_classifier = pickle.load(pickled_svm_object)
+
+    @UDP.handler
+    def svm_test(**kwargs):
+        global buffer
+        if 'dat' in kwargs:
+            buffer.append(kwargs['dat']['accelerometer'])
+
+        if len(buffer) == 16:
+            buf_ftr = Routines.sep_9_1242_feature(zip(*buffer))
+            pred = support_vector_classifier.predict(buf_ftr)
+
+            buffer[:] = []
+
+            if pred == 1:
+                click.echo("😆  {0} Stationary".format(pred))
+
+            if pred == 2:
+                click.echo("🚶  {0} Walk".format(pred))
+
+            if pred == 3:
+                click.echo("🏃  {0} Run".format(pred))
+
+    UDP.start_routine('', port)
 
 if __name__ == "__main__":
     main()
