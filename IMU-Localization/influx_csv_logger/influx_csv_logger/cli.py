@@ -458,8 +458,6 @@ def scratch(csv1, csv2):
     for i in Routines.sep_9_1242(x, y, z):
         ax.scatter(*i, c = 'r', marker = 'o')
 
-    print ("CSV 2")
-
     row = list(Helper.load_csv(csv2))
     x = [_['x'] for _ in row]
     y = [_['y'] for _ in row]
@@ -474,6 +472,52 @@ def scratch(csv1, csv2):
     ax.set_zlabel('Z Label')
 
     plt.show()
+
+@main.command()
+@click.option('--kernel', '-k', type=str, help='SVC Kernel')
+@click.option('--degree', '-d', type=int, help='SVC Degree (Only for Polynomial)')
+@click.argument('pickle_svm_object', type=click.File('wb'))
+def sep_9_1242(pickle_svm_object, kernel = 'poly', degree = 2):
+    """
+    Training routine written on September 9, 2015 at 12:42.
+    Gets data tagged as `stationary_stationary` and `walking_stationary` from influxdb.
+    Creates features through Routine Method sep_9_1242.
+    """
+
+    idb = Influx()
+
+    click.echo("😐  Loading the data from influxdb.")
+
+    static = idb.probe('accelerometer', tag = 'stationary_stationary')
+    walk   = idb.probe('accelerometer', tag = 'walking_stationary')
+
+    click.echo("😐  Creating features.")
+
+    ftr_static = Routines.sep_9_1242(*zip(*static))
+    ftr_walk   = Routines.sep_9_1242(*zip(*walk))
+
+    click.echo("😣  Flattening features.")
+
+    svm_static_val = list(ftr_static)
+    svm_walk_val   = list(ftr_walk)
+
+    lim = min(len(svm_static_val), len(svm_walk_val))
+
+    click.echo("😐  Concatinating features.")
+
+    X = svm_static_val[:lim]
+    Y = [1] * lim
+    X += svm_walk_val[:lim]
+    Y += [2] * lim
+
+    click.echo("😏  Training SVM.")
+
+    support_vector_classifier = SVC(kernel = kernel, degree = degree)
+    support_vector_classifier.fit(X, Y)
+
+    click.echo("😄  Dumping SVM Object.")
+
+    pickle.dump(support_vector_classifier, pickle_svm_object)
 
 if __name__ == "__main__":
     main()
