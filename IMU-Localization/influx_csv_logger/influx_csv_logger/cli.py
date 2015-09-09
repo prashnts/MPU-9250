@@ -12,6 +12,7 @@ import math
 import numpy as np
 import matplotlib.pyplot as plt
 
+from mpl_toolkits.mplot3d import Axes3D
 from sklearn.svm import SVC
 from scipy.optimize import curve_fit
 from numpy import linalg as LA
@@ -297,13 +298,6 @@ class Helper(object):
                 dat_map = {column_headers[i]: float(column_data[i]) for i in range(0, len(column_headers))}
                 yield dat_map
 
-class WalkingStationary(object):
-    def feature(data):
-        pass
-
-    def train(data):
-        pass
-
 @click.group()
 @click.pass_context
 def main(ctx):
@@ -388,13 +382,8 @@ class Routines(object):
             z (list): z axis probe data.
 
         Returns:
-            (list): 3D Feature Vector
+            (generator): 3D Feature Vector
         """
-
-        def func(x, a, b, c, d):
-            #: The fit-function
-            #: y = aSin(bx + c) + d
-            return a * np.sin(b * x + c) + d
 
         #: Overlapped x, y, and z axis data.
         #  Data length -> 16
@@ -402,44 +391,89 @@ class Routines(object):
         y_o = zip(*[y[_:] for _ in range(16)])
         z_o = zip(*[z[_:] for _ in range(16)])
 
-        #: Gathers row wise 
+        #: Gathers row wise data.
         row = zip(x_o, y_o, z_o)
 
         for val_set in row:
-            ftr = []
-            for col in val_set:
-                #: Curve fit each column to get the period, phase shift, vertical
-                #: shift, and amplitude.
-                try:
-                    #: if we find optimal fit, then append.
-                    popt = Helper.curve_fit(func, col)
-                    ftr.append(popt)
-                except RuntimeError:
-                    #: Let it be (TM)
-                    #: To keep the structure of the `ftr` intact
-                    #  we do this stupid hack.
-                    ftr.append([0, 0, 0, 0])
+            yield Routines.sep_9_1242_feature(val_set)
 
-            #: Yield a single feature, combining all of the above
-            ftr_cmb = zip(*ftr)
+    @staticmethod
+    def sep_9_1242_feature(val_set):
+        """
+        Supplementary method for method `sep_9_1242`.
+        It performs the subtask 2 to 5 for the previous method.
+        It has been separated from parent method for modular usage while training the streaming data.
 
-            ampl  = next(ftr_cmb)   # Amplitude
-            phase = next(ftr_cmb)   # Phase
-            ph_sh = next(ftr_cmb)   # Phase Shift
-            ve_sh = next(ftr_cmb)   # Vertical Shift
+        Args:
+            val_set (list): List containing the list of chunks of data.
 
-            eig_val, eig_vec = LA.eig([ampl, phase, ph_sh])
+        Returns:
+            (list): Eigenvalues, feature.
+        """
 
-            yield [np.absolute(_) for _ in eig_val]
+        def func(x, a, b, c, d):
+            #: The fit-function
+            #: y = aSin(bx + c) + d
+            return a * np.sin(b * x + c) + d
 
+        ftr = []
+        for col in val_set:
+            #: Curve fit each column to get the period, phase shift, vertical
+            #: shift, and amplitude.
+            try:
+                #: if we find optimal fit, then append.
+                popt = Helper.curve_fit(func, col)
+                ftr.append(popt)
+            except RuntimeError:
+                #: Let it be (TM)
+                #: To keep the structure of the `ftr` intact
+                #  we do this stupid hack.
+                ftr.append([0, 0, 0, 0])
+
+        #: Yield a single feature, combining all of the above
+        ftr_cmb = zip(*ftr)
+
+        ampl  = next(ftr_cmb)   # Amplitude
+        phase = next(ftr_cmb)   # Phase
+        ph_sh = next(ftr_cmb)   # Phase Shift
+        ve_sh = next(ftr_cmb)   # Vertical Shift
+
+        eig_val, eig_vec = LA.eig([ampl, phase, ph_sh])
+
+        return [np.absolute(_) for _ in eig_val]
 
 @main.command()
-@click.argument('csv', type = click.File('r'))
-def scratch(csv):
-    row = list(Helper.load_csv(csv))
+@click.argument('csv1', type = click.File('r'))
+@click.argument('csv2', type = click.File('r'))
+def scratch(csv1, csv2):
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+
+    row = list(Helper.load_csv(csv1))
     x = [_['x'] for _ in row]
     y = [_['y'] for _ in row]
     z = [_['z'] for _ in row]
+
+    for i in Routines.sep_9_1242(x, y, z):
+        ax.scatter(*i, c = 'r', marker = 'o')
+
+    print ("CSV 2")
+
+    row = list(Helper.load_csv(csv2))
+    x = [_['x'] for _ in row]
+    y = [_['y'] for _ in row]
+    z = [_['z'] for _ in row]
+
+    for i in Routines.sep_9_1242(x, y, z):
+        ax.scatter(*i, c = 'b', marker = '^')
+
+    ax.set_xlim(left = -10, right = 10)
+    ax.set_xlabel('X Label')
+    ax.set_ylabel('Y Label')
+    ax.set_zlabel('Z Label')
+
+    plt.show()
 
 if __name__ == "__main__":
     main()
