@@ -331,36 +331,37 @@ def log_udp(port):
     UDP.start_routine('', port)
 
 @main.command()
-@click.option('--port', '-p',
-    type = int,
-    required = True,
-    prompt = True,
-    help = "UDP Broadcast Port Number"
-)
-@click.argument('pickled', type = click.File('r'))
-def test(pickled, port):
+@click.argument('csv', type = click.File('r'))
+def log_csv(csv):
     """
+    Logs the CSV formatted sensor data in the InfluxDB.
     """
+    mmt_class = Helper.gather_class()
 
-    feature, svm_object = pickle.load(pickled)
+    influx_client = Influx()
 
-    dat = []
+    def _transform(data):
+        """
+        Internal method for CSV transformation.
+        """
 
-    @UDP.handler
-    def svm_test(**kwargs):
-        global dat
+        acce = ['Accel_X', 'Accel_Y', 'Accel_Z']
+        gyro = ['RotRate_X', 'RotRate_Y', 'RotRate_Z']
+        magn = ['MagX', 'MagY', 'MagZ']
+        ahrs = ['Roll', 'Pitch', 'Yaw']
 
-        pass
+        return {
+            'accelerometer': [data[_] for _ in acce],
+            'gyroscope':     [data[_] for _ in gyro],
+            'magnetometer':  [data[_] for _ in magn],
+            'ahrs':          [data[_] for _ in ahrs]
+        }
 
-    UDP.start_routine('', port)
+    rows = Helper.load_csv(csv)
 
-@main.command()
-def debug():
-    """
-    Debug commands.
-    """
-
-    print(locals())
+    for row in rows:
+        influx_client.write(_transform(row), mmt_class)
+        click.secho('\rLogging: {0}'.format(next(Helper.pool)), nl = False)
 
 class Routines(object):
     """
@@ -445,30 +446,49 @@ class Routines(object):
         return [np.absolute(_) for _ in eig_val]
 
 @main.command()
-@click.argument('csv1', type = click.File('r'))
-@click.argument('csv2', type = click.File('r'))
-def scratch(csv1, csv2):
+# @click.argument('csv1', type = click.File('r'))
+# @click.argument('csv2', type = click.File('r'))
+def scratch():
 
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
 
-    row = list(Helper.load_csv(csv1))
-    x = [_['x'] for _ in row]
-    y = [_['y'] for _ in row]
-    z = [_['z'] for _ in row]
+    idb = Influx()
 
-    for i in Routines.sep_9_1242(x, y, z):
-        ax.scatter(*i, c = 'r', marker = 'o')
+    click.echo("😐  Loading the data from influxdb.")
 
-    row = list(Helper.load_csv(csv2))
-    x = [_['x'] for _ in row]
-    y = [_['y'] for _ in row]
-    z = [_['z'] for _ in row]
+    static = idb.probe('accelerometer', tag = 'stationary_stationary')
+    walk   = idb.probe('accelerometer', tag = 'walking_stationary')
+    run    = idb.probe('accelerometer', tag = 'running_stationary')
 
-    for i in Routines.sep_9_1242(x, y, z):
-        ax.scatter(*i, c = 'b', marker = '^')
+    click.echo("😐  Creating features.")
+
+    ftr_static = Routines.sep_9_1242(*zip(*static))
+    ftr_walk   = Routines.sep_9_1242(*zip(*walk))
+    ftr_run    = Routines.sep_9_1242(*zip(*run))
+
+    click.echo("😣  Flattening features.")
+
+    svm_static_val = list(ftr_static)
+    svm_walk_val   = list(ftr_walk)
+    svm_run_val    = list(ftr_run)
+
+    lim = min(len(svm_static_val), len(svm_walk_val), len(svm_run_val))
+
+    click.echo("😐  Plotting features.")
+
+    for i in svm_static_val[:lim]:
+        ax.scatter(*i, c = 'b', marker = 'p')
+
+    for i in svm_walk_val[:lim]:
+        ax.scatter(*i, c = 'r', marker = '*')
+
+    for i in svm_run_val[:lim]:
+        ax.scatter(*i, c = 'g', marker = 'o')
 
     ax.set_xlim(left = -10, right = 10)
+    ax.set_ylim(left = -10, right = 10)
+    ax.set_zlim(left = -10, right = 10)
     ax.set_xlabel('X Label')
     ax.set_ylabel('Y Label')
     ax.set_zlabel('Z Label')
