@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 
 from mpl_toolkits.mplot3d import Axes3D
 from sklearn.svm import SVC
+from sklearn.decomposition import PCA
 from scipy.optimize import curve_fit
 from numpy import linalg as LA
 from itertools import cycle
@@ -63,7 +64,7 @@ class Influx(object):
             ResultSet: The InfluxDB result instance.
         """
 
-        args = {_: arguments[_] if _ in arguments else None for _ in ['tag', 'time_lower', 'time_upper', 'limit']}
+        args = {_: arguments[_] if _ in arguments else None for _ in ['tag', 'time_lower', 'time_upper', 'limit', 'offset']}
 
         q = "SELECT * FROM {0}".format(measurement)
 
@@ -88,7 +89,9 @@ class Influx(object):
         if args['time_upper'] and args['limit']:
             q += " AND "
 
-        if args['limit']:
+        if args['limit'] and args['offset']:
+            q += " limit {0} offset {1};".format(args['limit'], args['offset'])
+        elif args['limit']:
             q += " limit {0};".format(args['limit'])
         else:
             q += ";"
@@ -457,23 +460,23 @@ def scratch():
 
     click.echo("😐  Loading the data from influxdb.")
 
-    static = idb.probe('accelerometer', tag = 'stationary_stationary')
-    walk   = idb.probe('accelerometer', tag = 'walking_stationary')
-    run    = idb.probe('accelerometer', tag = 'running_stationary')
+    static = idb.probe('accelerometer', limit = 32, offset = 100, tag = 'static_9_sep_1534')
+    walk   = idb.probe('accelerometer', limit = 32, offset = 100, tag = 'walk_9_sep_1511')
+    #run    = idb.probe('accelerometer', tag = 'running_stationary')
 
     click.echo("😐  Creating features.")
 
     ftr_static = Routines.sep_9_1242(*zip(*static))
     ftr_walk   = Routines.sep_9_1242(*zip(*walk))
-    ftr_run    = Routines.sep_9_1242(*zip(*run))
+    #ftr_run    = Routines.sep_9_1242(*zip(*run))
 
     click.echo("😣  Flattening features.")
 
     svm_static_val = list(ftr_static)
     svm_walk_val   = list(ftr_walk)
-    svm_run_val    = list(ftr_run)
+    #svm_run_val    = list(ftr_run)
 
-    lim = min(len(svm_static_val), len(svm_walk_val), len(svm_run_val))
+    lim = min(len(svm_static_val), len(svm_walk_val))#, len(svm_run_val))
 
     click.echo("😐  Plotting features.")
 
@@ -483,17 +486,63 @@ def scratch():
     for i in svm_walk_val[:lim]:
         ax.scatter(*i, c = 'r', marker = '*')
 
-    for i in svm_run_val[:lim]:
-        ax.scatter(*i, c = 'g', marker = 'o')
+    #for i in svm_run_val[:lim]:
+    #    ax.scatter(*i, c = 'g', marker = 'o')
 
-    ax.set_xlim(left = -10, right = 10)
-    ax.set_ylim(left = -10, right = 10)
-    ax.set_zlim(left = -10, right = 10)
+    ax.set_xlim([0, 10])
+    ax.set_ylim([0, 10])
+    ax.set_zlim([0, 10])
     ax.set_xlabel('X Label')
     ax.set_ylabel('Y Label')
     ax.set_zlabel('Z Label')
 
     plt.show()
+
+@main.command()
+def scratch_2():
+
+    fig = plt.figure()
+    ax = fig.add_subplot(331)
+    ay = fig.add_subplot(332)
+    az = fig.add_subplot(333)
+    bx = fig.add_subplot(334)
+    by = fig.add_subplot(335)
+    bz = fig.add_subplot(336)
+    cx = fig.add_subplot(337)
+    cy = fig.add_subplot(338)
+    cz = fig.add_subplot(339)
+
+    idb = Influx()
+
+    click.echo("😐  Loading the data from influxdb.")
+
+    static = list(zip(*idb.probe('accelerometer', limit = 100, offset = 140, tag = 'static_9_sep_1534')))
+    walk   = list(zip(*idb.probe('accelerometer', limit = 100, offset = 140, tag = 'walk_9_sep_1511')))
+    run   = list(zip(*idb.probe('accelerometer', limit = 100, offset = 140, tag = 'run_9_sep_1505')))
+
+    ax.plot(static[0])
+    ay.plot(static[1])
+    az.plot(static[2])
+
+    bx.plot(walk[0])
+    by.plot(walk[1])
+    bz.plot(walk[2])
+
+    cx.plot(run[0])
+    cy.plot(run[1])
+    cz.plot(run[2])
+
+    ax.set_ylim([-5, 5])
+    ay.set_ylim([-5, 5])
+    az.set_ylim([-5, 5])
+    bx.set_ylim([-5, 5])
+    by.set_ylim([-5, 5])
+    bz.set_ylim([-5, 5])
+    cx.set_ylim([-5, 5])
+    cy.set_ylim([-5, 5])
+    cz.set_ylim([-5, 5])
+    plt.show()
+
 
 @main.command()
 @click.option('--kernel', '-k', type=str, help='SVC Kernel')
