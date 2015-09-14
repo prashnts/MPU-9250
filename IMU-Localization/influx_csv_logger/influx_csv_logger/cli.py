@@ -516,21 +516,69 @@ def scratch_2():
 
     click.echo("😐  Loading the data from influxdb.")
 
-    static = list(zip(*idb.probe('accelerometer', limit = 100, offset = 140, tag = 'static_9_sep_1534')))
-    walk   = list(zip(*idb.probe('accelerometer', limit = 100, offset = 140, tag = 'walk_9_sep_1511')))
-    run   = list(zip(*idb.probe('accelerometer', limit = 100, offset = 140, tag = 'run_9_sep_1505')))
+    lim = 32
+
+    static = list(zip(*idb.probe('accelerometer', limit = lim, offset = 140, tag = 'static_9_sep_1534')))
+    walk   = list(zip(*idb.probe('accelerometer', limit = lim, offset = 140, tag = 'walk_9_sep_1511')))
+    run   = list(zip(*idb.probe('accelerometer', limit = lim, offset = 140, tag = 'run_9_sep_1505')))
+
+    def f(x, a, b, c, d):
+        return a * np.sin(b * x + c) + d
+
+    def fit_plt(l):
+        # Fit the data.
+        popt = Helper.curve_fit(f, l)
+        # create set of vals.
+        return [f(_, *popt) for _ in range(len(l))]
+
+    def band_pass(l):
+        avg = sum(l) / len(l)
+
+        def _filter(x):
+            if x >= avg:
+                return 1
+            return 0
+
+        return [_filter(_) for _ in l]
+
+    def ban_pass(l):
+        avg = sum(l) / len(l)
+
+        def _filter(x):
+            if abs(x) >= abs(avg):
+                return 1
+            return 0
+
+        return [_filter(_) for _ in l]
+
+    def avg(l):
+        avg = sum(l) / len(l)
+        return [avg] * len(l)
 
     ax.plot(static[0])
+    ax.plot(fit_plt(static[0]))
     ay.plot(static[1])
+    ay.plot(fit_plt(static[1]))
     az.plot(static[2])
+    az.plot(fit_plt(static[2]))
 
     bx.plot(walk[0])
+    bx.plot(fit_plt(walk[0]))
     by.plot(walk[1])
+    by.plot(fit_plt(walk[1]))
     bz.plot(walk[2])
+    bz.plot(fit_plt(walk[2]))
 
     cx.plot(run[0])
+    cx.plot(fit_plt(run[0]))
+    #cx.plot([abs(_) for _ in run[0]])
+    cx.plot(band_pass(run[0]))
+    cx.plot(ban_pass(run[0]))
+    cx.plot(avg(run[0]))
     cy.plot(run[1])
+    cy.plot(fit_plt(run[1]))
     cz.plot(run[2])
+    cz.plot(fit_plt(run[2]))
 
     ax.set_ylim([-5, 5])
     ay.set_ylim([-5, 5])
