@@ -9,6 +9,8 @@ import socketserver
 import json
 import pickle
 import math
+import asyncio
+import websockets
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -317,6 +319,51 @@ class Helper(object):
         result = r/(variance*(np.arange(n, 0, -1)))
         return result
 
+    @staticmethod
+    def discreet_wave_energy(l):
+        """
+
+        """
+
+        def area_under(a, b):
+            """
+            Calculates absolute area contained below a straight line joining a and b from a to b.
+            Mathematically, this is Integral(|line(x, a, b)|)dx from a to b.
+            The integral is calculated numerically, with the precision defined by STEP_VAL (default: 0.01).
+            STEP_VAL can be decreased for increased precision, however, it has number of times while loop is ran is 1/STEP_VAL, hence, this parameter must be changed manually - directly in source.
+            Args:
+                a (float): y1 value
+                b (float): y2 value
+            Returns:
+                (float) Area
+            """
+            def line(x):
+                """
+                Using two - point equation for the straight line
+                x1, and x2 are assumed to be 0 and 1 respectively due to parent.
+                y - a = (b - a)x
+                Args:
+                    x (float): function variable
+                Returns:
+                    (float) y value at x
+                """
+                return ((b - a) * x - a)
+
+            STEP_VAL = 0.01
+
+            area = 0
+            x = 0
+
+            while x <= 1:
+                area += STEP_VAL * abs(line(x))
+                x += STEP_VAL
+
+            return area
+
+        pairs = zip(l[0::], l[1::])
+
+        return sum([area_under(*_) for _ in pairs])
+
 @click.group()
 @click.pass_context
 def main(ctx):
@@ -531,7 +578,7 @@ def scratch_2():
     click.echo("😐  Loading the data from influxdb.")
 
     lim = 30
-    offset = 240
+    offset = 440
 
     static = list(zip(*idb.probe('accelerometer', limit = lim, offset = offset, tag = 'static_9_sep_1534')))
     walk   = list(zip(*idb.probe('accelerometer', limit = lim, offset = offset, tag = 'walk_9_sep_1511')))
@@ -545,7 +592,7 @@ def scratch_2():
     def fit_plt(l):
         # Fit the data.
         popt = Helper.curve_fit(f, l)
-        print([popt, np.var(l), np.fft.fft(l)])
+        #print([popt, np.var(l)])
         #popt = Helper.curve_fit(f2, l)
         #print(popt)
         # create set of vals.
@@ -578,6 +625,10 @@ def scratch_2():
     az.plot(static[2])
     az.plot(fit_plt(static[2]))
 
+    print(Helper.discreet_wave_energy(static[0] + static[1] + static[2]))
+    print(Helper.discreet_wave_energy(walk[0] + walk[1] + walk[2]))
+    print(Helper.discreet_wave_energy(run[0] + run[1] + run[2]))
+
     bx.plot(walk[0])
     bx.plot(fit_plt(walk[0]))
     by.plot(walk[1])
@@ -594,7 +645,7 @@ def scratch_2():
     cy.plot(run[1])
     cy.plot(fit_plt(run[1]))
     cy.plot(Helper.autocorrelation(run[1]))
-    cy.plot(fit_plt(Helper.autocorrelation(run[1])))
+    #cy.plot(fit_plt(Helper.autocorrelation(run[1])))
     cz.plot(run[2])
     cz.plot(Helper.autocorrelation(run[2]))
     cz.plot(fit_plt(run[2]))
@@ -609,7 +660,6 @@ def scratch_2():
     cy.set_ylim([-5, 5])
     cz.set_ylim([-5, 5])
     plt.show()
-
 
 @main.command()
 @click.option('--kernel', '-k', type=str, help='SVC Kernel')
