@@ -9,8 +9,6 @@ import socketserver
 import json
 import pickle
 import math
-import asyncio
-import websockets
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -364,6 +362,18 @@ class Helper(object):
 
         return sum([area_under(*_) for _ in pairs])
 
+    def sine_wave_energy(m, n, a, b, c, d):
+        """
+        """
+
+        def int_sine(x):
+            """
+            """
+            return (b * d * x - a * np.cos(b * x + c)) * np.sign(a * np.sin(b * x + c) + d) / d
+
+        return abs(int_sine(n) - int_sine(m))
+
+
 @click.group()
 @click.pass_context
 def main(ctx):
@@ -508,6 +518,88 @@ class Routines(object):
         eig_val, eig_vec = LA.eig([ampl, phase, ph_sh])
 
         return [np.absolute(_) for _ in eig_val]
+
+    @staticmethod
+    def sep_15_2332(x, y, z):
+        """
+        This method creates a feature in Four stages:
+        1. Create overlapping chunks of the x, y, z axis data, 16 length.
+        1.1 Calculate "wave" data.
+        2. Fit individual axes on `y = aSin(bx + c) + d`.
+        3. Create a 3x4 matrix, with each row having: [a, b, c, d].
+        4. Remove column with parameter `d` (vertical shift) to get a 3x3 matrix.
+        5. Yield the eigenvalue of the matrix - feature.
+
+        Args:
+            x (list): x axis probe data.
+            y (list): y axis probe data.
+            z (list): z axis probe data.
+
+        Returns:
+            (generator): 3D Feature Vector
+        """
+
+        #: Overlapped x, y, and z axis data.
+        #  Data length -> 16
+        x_o = zip(*[x[_:] for _ in range(16)])
+        y_o = zip(*[y[_:] for _ in range(16)])
+        z_o = zip(*[z[_:] for _ in range(16)])
+
+        #: Gathers row wise data.
+        row = zip(x_o, y_o, z_o)
+
+        for val_set in row:
+            yield Routines.sep_15_2332_feature(val_set)
+
+    @staticmethod
+    def sep_15_2332_feature(val_set):
+        """
+        Supplementary method for method `sep_9_1242`.
+        It performs the subtask 2 to 5 for the previous method.
+        It has been separated from parent method for modular usage while training the streaming data.
+
+        Args:
+            val_set (list): List containing the list of chunks of data.
+
+        Returns:
+            (list): Eigenvalues, feature.
+        """
+
+        def func(x, a, b, c, d):
+            #: The fit-function
+            #: y = aSin(bx + c) + d
+            return a * np.sin(b * x + c) + d
+
+        ftr = []
+        energy = []
+        energy_s = []
+        for col in val_set:
+            #: Curve fit each column to get the period, phase shift, vertical
+            #: shift, and amplitude.
+            try:
+                #: if we find optimal fit, then append.
+                popt = Helper.curve_fit(func, col)
+                energy.append(Helper.discreet_wave_energy(col))
+                energy_s.append(Helper.sine_wave_energy(0, len(val_set), *popt))
+                ftr.append(popt)
+            except RuntimeError:
+                #: Let it be (TM)
+                #: To keep the structure of the `ftr` intact
+                #  we do this stupid hack.
+                ftr.append([0, 0, 0, 0])
+
+        #: Yield a single feature, combining all of the above
+        ftr_cmb = zip(*ftr)
+
+        ampl  = next(ftr_cmb)   # Amplitude
+        phase = next(ftr_cmb)   # Phase
+        ph_sh = next(ftr_cmb)   # Phase Shift
+        ve_sh = next(ftr_cmb)   # Vertical Shift
+
+        eig_val, eig_vec = LA.eig([ampl, phase, ve_sh])
+        #eig_val = [np.var(ampl), np.var(phase), np.var(ph_sh)]
+
+        return [np.absolute(_) for _ in eig_val] + [sum(energy)]
 
 @main.command()
 # @click.argument('csv1', type = click.File('r'))
@@ -660,6 +752,76 @@ def scratch_2():
     cy.set_ylim([-5, 5])
     cz.set_ylim([-5, 5])
     plt.show()
+
+@main.command()
+def scratch_3():
+
+    fig = plt.figure()
+    ax = fig.add_subplot(221)
+    ay = fig.add_subplot(222)
+    az = fig.add_subplot(223)
+    bx = fig.add_subplot(224)
+    # by = fig.add_subplot(335)
+    # bz = fig.add_subplot(336)
+    # cx = fig.add_subplot(337)
+    # cy = fig.add_subplot(338)
+    # cz = fig.add_subplot(339)
+
+    idb = Influx()
+
+    click.echo("😐  Loading the data from influxdb.")
+
+    lim = 640
+    offset = 0
+
+    static = list(zip(*idb.probe('accelerometer', limit = lim, offset = offset, tag = 'static_9_sep_1534')))
+    walk   = list(zip(*idb.probe('accelerometer', limit = lim, offset = offset, tag = 'walk_9_sep_1511')))
+    run   = list(zip(*idb.probe('accelerometer', limit = lim, offset = offset, tag = 'run_9_sep_1505')))
+
+    static_ftr = list(Routines.sep_15_2332(*static))
+    walk_ftr = list(Routines.sep_15_2332(*walk))
+    run_ftr = list(Routines.sep_15_2332(*run))
+    ax.plot([_[3] for _ in static_ftr])
+    ax.plot([_[3] for _ in walk_ftr])
+    ax.plot([_[3] for _ in run_ftr])
+
+    ay.plot([_[0] for _ in static_ftr])
+    ay.plot([_[0] for _ in walk_ftr])
+    ay.plot([_[0] for _ in run_ftr])
+
+    az.plot([_[1] for _ in static_ftr])
+    az.plot([_[1] for _ in walk_ftr])
+    az.plot([_[1] for _ in run_ftr])
+
+    bx.plot([_[2] for _ in static_ftr])
+    bx.plot([_[2] for _ in walk_ftr])
+    bx.plot([_[2] for _ in run_ftr])
+
+
+
+    # ax.plot(static[0])
+    # ay.plot(static[1])
+    # az.plot(static[2])
+
+    # bx.plot(walk[0])
+    # by.plot(walk[1])
+    # bz.plot(walk[2])
+
+    # cx.plot(run[0])
+    # cy.plot(run[1])
+    # cz.plot(run[2])
+
+    ax.set_ylim([0, 30])
+    ay.set_ylim([0, 5])
+    az.set_ylim([0, 5])
+    # bx.set_ylim([-5, 5])
+    # by.set_ylim([-5, 5])
+    # bz.set_ylim([-5, 5])
+    # cx.set_ylim([-5, 5])
+    # cy.set_ylim([-5, 5])
+    # cz.set_ylim([-5, 5])
+    plt.show()
+
 
 @main.command()
 @click.option('--kernel', '-k', type=str, help='SVC Kernel')
