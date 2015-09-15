@@ -303,6 +303,20 @@ class Helper(object):
                 dat_map = {column_headers[i]: float(column_data[i]) for i in range(0, len(column_headers))}
                 yield dat_map
 
+    @staticmethod
+    def autocorrelation(x):
+        """
+        http://stackoverflow.com/q/14297012/190597
+        http://en.wikipedia.org/wiki/Autocorrelation#Estimation
+        """
+        n = len(x)
+        variance = np.var(x)
+        x = x-np.mean(x)
+        r = np.correlate(x, x, mode = 'full')[-n:]
+        assert np.allclose(r, np.array([(x[:n-k]*x[-(n-k):]).sum() for k in range(n)]))
+        result = r/(variance*(np.arange(n, 0, -1)))
+        return result
+
 @click.group()
 @click.pass_context
 def main(ctx):
@@ -516,18 +530,24 @@ def scratch_2():
 
     click.echo("😐  Loading the data from influxdb.")
 
-    lim = 32
+    lim = 30
+    offset = 240
 
-    static = list(zip(*idb.probe('accelerometer', limit = lim, offset = 140, tag = 'static_9_sep_1534')))
-    walk   = list(zip(*idb.probe('accelerometer', limit = lim, offset = 140, tag = 'walk_9_sep_1511')))
-    run   = list(zip(*idb.probe('accelerometer', limit = lim, offset = 140, tag = 'run_9_sep_1505')))
+    static = list(zip(*idb.probe('accelerometer', limit = lim, offset = offset, tag = 'static_9_sep_1534')))
+    walk   = list(zip(*idb.probe('accelerometer', limit = lim, offset = offset, tag = 'walk_9_sep_1511')))
+    run   = list(zip(*idb.probe('accelerometer', limit = lim, offset = offset, tag = 'run_9_sep_1505')))
 
     def f(x, a, b, c, d):
         return a * np.sin(b * x + c) + d
+    def f2(x, a, b, c, d):
+        return a * np.sin((2 * np.pi * b * x) + c) + d
 
     def fit_plt(l):
         # Fit the data.
         popt = Helper.curve_fit(f, l)
+        print([popt, np.var(l), np.fft.fft(l)])
+        #popt = Helper.curve_fit(f2, l)
+        #print(popt)
         # create set of vals.
         return [f(_, *popt) for _ in range(len(l))]
 
@@ -542,14 +562,10 @@ def scratch_2():
         return [_filter(_) for _ in l]
 
     def ban_pass(l):
-        avg = sum(l) / len(l)
-
-        def _filter(x):
-            if abs(x) >= abs(avg):
-                return 1
-            return 0
-
-        return [_filter(_) for _ in l]
+        popt = Helper.curve_fit(f, l)
+        # create set of vals.
+        v = sum([abs(_) for _ in l])/len(l)
+        return [v * f(_, *popt) for _ in range(len(l))]
 
     def avg(l):
         avg = sum(l) / len(l)
@@ -568,16 +584,19 @@ def scratch_2():
     by.plot(fit_plt(walk[1]))
     bz.plot(walk[2])
     bz.plot(fit_plt(walk[2]))
+    bz.plot(Helper.autocorrelation(walk[2]))
 
     cx.plot(run[0])
     cx.plot(fit_plt(run[0]))
     #cx.plot([abs(_) for _ in run[0]])
-    cx.plot(band_pass(run[0]))
+    #cx.plot(band_pass(run[0]))
     cx.plot(ban_pass(run[0]))
-    cx.plot(avg(run[0]))
     cy.plot(run[1])
     cy.plot(fit_plt(run[1]))
+    cy.plot(Helper.autocorrelation(run[1]))
+    cy.plot(fit_plt(Helper.autocorrelation(run[1])))
     cz.plot(run[2])
+    cz.plot(Helper.autocorrelation(run[2]))
     cz.plot(fit_plt(run[2]))
 
     ax.set_ylim([-5, 5])
