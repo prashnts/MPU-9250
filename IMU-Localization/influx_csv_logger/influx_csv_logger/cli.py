@@ -599,7 +599,7 @@ class Routines(object):
         eig_val, eig_vec = LA.eig([ampl, phase, ve_sh])
         #eig_val = [np.var(ampl), np.var(phase), np.var(ph_sh)]
 
-        return [np.absolute(_) for _ in eig_val] + [sum(energy_s)]
+        return [np.absolute(_) for _ in eig_val] + [2*math.pi / phase[0]]
 
 @main.command()
 # @click.argument('csv1', type = click.File('r'))
