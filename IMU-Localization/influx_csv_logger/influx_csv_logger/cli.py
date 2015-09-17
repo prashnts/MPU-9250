@@ -373,7 +373,6 @@ class Helper(object):
 
         return abs(int_sine(n) - int_sine(m))
 
-
 @click.group()
 @click.pass_context
 def main(ctx):
@@ -572,7 +571,6 @@ class Routines(object):
 
         ftr = []
         energy = []
-        energy_s = []
         for col in val_set:
             #: Curve fit each column to get the period, phase shift, vertical
             #: shift, and amplitude.
@@ -580,7 +578,6 @@ class Routines(object):
                 #: if we find optimal fit, then append.
                 popt = Helper.curve_fit(func, col)
                 energy.append(Helper.discreet_wave_energy(col))
-                energy_s.append(Helper.sine_wave_energy(0, len(val_set), *popt))
                 ftr.append(popt)
             except RuntimeError:
                 #: Let it be (TM)
@@ -599,7 +596,7 @@ class Routines(object):
         eig_val, eig_vec = LA.eig([ampl, phase, ve_sh])
         #eig_val = [np.var(ampl), np.var(phase), np.var(ph_sh)]
 
-        return [np.absolute(_) for _ in eig_val] + [2*math.pi / phase[0]]
+        return [np.absolute(_) for _ in eig_val[0:2]] + [sum(energy) / 16]
 
 @main.command()
 # @click.argument('csv1', type = click.File('r'))
@@ -615,19 +612,19 @@ def scratch():
 
     static = idb.probe('accelerometer', limit = 32, offset = 100, tag = 'static_9_sep_1534')
     walk   = idb.probe('accelerometer', limit = 32, offset = 100, tag = 'walk_9_sep_1511')
-    #run    = idb.probe('accelerometer', tag = 'running_stationary')
+    run    = idb.probe('accelerometer', tag = 'running_stationary')
 
     click.echo("😐  Creating features.")
 
-    ftr_static = Routines.sep_9_1242(*zip(*static))
-    ftr_walk   = Routines.sep_9_1242(*zip(*walk))
-    #ftr_run    = Routines.sep_9_1242(*zip(*run))
+    ftr_static = Routines.sep_15_2332(*zip(*static))
+    ftr_walk   = Routines.sep_15_2332(*zip(*walk))
+    ftr_run    = Routines.sep_15_2332(*zip(*run))
 
     click.echo("😣  Flattening features.")
 
     svm_static_val = list(ftr_static)
     svm_walk_val   = list(ftr_walk)
-    #svm_run_val    = list(ftr_run)
+    svm_run_val    = list(ftr_run)
 
     lim = min(len(svm_static_val), len(svm_walk_val))#, len(svm_run_val))
 
@@ -639,12 +636,12 @@ def scratch():
     for i in svm_walk_val[:lim]:
         ax.scatter(*i, c = 'r', marker = '*')
 
-    #for i in svm_run_val[:lim]:
-    #    ax.scatter(*i, c = 'g', marker = 'o')
+    for i in svm_run_val[:lim]:
+        ax.scatter(*i, c = 'g', marker = 'o')
 
     ax.set_xlim([0, 10])
     ax.set_ylim([0, 10])
-    ax.set_zlim([0, 10])
+    #ax.set_zlim([0, 10])
     ax.set_xlabel('X Label')
     ax.set_ylabel('Y Label')
     ax.set_zlabel('Z Label')
@@ -822,7 +819,6 @@ def scratch_3():
     # cz.set_ylim([-5, 5])
     plt.show()
 
-
 @main.command()
 @click.option('--kernel', '-k', type=str, help='SVC Kernel')
 @click.option('--degree', '-d', type=int, help='SVC Degree (Only for Polynomial)')
@@ -906,26 +902,26 @@ def sep_9_1242_test(pickled_svm_object, port):
 @click.option('--kernel', '-k', type=str, help='SVC Kernel')
 @click.option('--degree', '-d', type=int, help='SVC Degree (Only for Polynomial)')
 @click.argument('pickle_svm_object', type=click.File('wb'))
-def sep_9_1448(pickle_svm_object, kernel = 'poly', degree = 2):
+def sep17_1(pickle_svm_object, kernel = 'poly', degree = 2):
     """
-    Training routine written on September 9, 2015 at 14:48.
-    Gets data tagged as `stationary_stationary`, `running_stationary`, and `walking_stationary` from influxdb.
-    Creates features through Routine Method sep_9_1242.
+    Training routine written on September 17, 2015 at 13:41.
+    Gets data tagged as `static_9_sep_1534`, `run_9_sep_1505`, and `walk_9_sep_1511` from influxdb.
+    Creates features through Routine Method sep_15_2332.
     """
 
     idb = Influx()
 
     click.echo("😐  Loading the data from influxdb.")
 
-    static = idb.probe('accelerometer', tag = 'stationary_stationary')
-    walk   = idb.probe('accelerometer', tag = 'walking_stationary')
-    run    = idb.probe('accelerometer', tag = 'running_stationary')
+    static = idb.probe('accelerometer', tag = 'static_9_sep_1534')
+    walk   = idb.probe('accelerometer', tag = 'walk_9_sep_1511')
+    run    = idb.probe('accelerometer', tag = 'run_9_sep_1505')
 
     click.echo("😐  Creating features.")
 
-    ftr_static = Routines.sep_9_1242(*zip(*static))
-    ftr_walk   = Routines.sep_9_1242(*zip(*walk))
-    ftr_run    = Routines.sep_9_1242(*zip(*run))
+    ftr_static = Routines.sep_15_2332(*zip(*static))
+    ftr_walk   = Routines.sep_15_2332(*zip(*walk))
+    ftr_run    = Routines.sep_15_2332(*zip(*run))
 
     click.echo("😣  Flattening features.")
 
@@ -937,8 +933,8 @@ def sep_9_1448(pickle_svm_object, kernel = 'poly', degree = 2):
 
     click.echo("😐  Concatinating features.")
 
-    X = svm_static_val[:lim]
-    Y = [1] * lim
+    X  = svm_static_val[:lim]
+    Y  = [1] * lim
     X += svm_walk_val[:lim]
     Y += [2] * lim
     X += svm_run_val[:lim]
@@ -961,17 +957,18 @@ def sep_9_1448(pickle_svm_object, kernel = 'poly', degree = 2):
     help = "UDP Broadcast Port Number"
 )
 @click.argument('pickled_svm_object', type=click.File('rb'))
-def sep_9_1448_test(pickled_svm_object, port):
+def sep17_1_test(pickled_svm_object, port):
     support_vector_classifier = pickle.load(pickled_svm_object)
 
     @UDP.handler
     def svm_test(**kwargs):
         global buffer
         if 'dat' in kwargs:
+            click.echo(".", nl=False)
             buffer.append(kwargs['dat']['accelerometer'])
 
         if len(buffer) == 16:
-            buf_ftr = Routines.sep_9_1242_feature(zip(*buffer))
+            buf_ftr = Routines.sep_15_2332_feature(zip(*buffer))
             pred = support_vector_classifier.predict(buf_ftr)
 
             buffer[:] = []
