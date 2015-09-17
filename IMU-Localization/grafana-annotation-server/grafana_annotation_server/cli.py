@@ -4,6 +4,7 @@ import time
 import threading
 
 from flask import Flask, render_template, request, jsonify
+from flask.ext.cors import CORS
 
 def setInterval(interval):
     def decorator(function):
@@ -73,6 +74,7 @@ class Annotation(object):
             minion.write(json.dumps(self._data, indent = 4))
 
 app = Flask(__name__)
+CORS(app)
 annotation_db = None
 
 @app.route('/', methods=['POST','GET'])
@@ -95,7 +97,7 @@ def log():
 
         annotation_db.log(**payload)
 
-        return jsonify({"error": False}), 201
+        return jsonify({"error": False}), 202 
 
     except Exception:
         return jsonify({"error": True, "error_msg": "Incorrect Payload data"}), 400
