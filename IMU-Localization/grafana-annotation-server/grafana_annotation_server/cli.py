@@ -29,7 +29,6 @@ class Annotation(object):
         """
         self._file_name = file_name
         self.load()
-        self.dump()
 
     def log(self, target_class, time_range, source_class):
         """
@@ -109,5 +108,6 @@ def main(file_name, port):
     """HTTP Backend API for Grafana Annotations."""
     global annotation_db
     annotation_db = Annotation(file_name)
+    annotation_db.dump()
 
     app.run(host = '0.0.0.0', port = port, debug = True, threaded=True)

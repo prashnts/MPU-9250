@@ -20,6 +20,8 @@ from numpy import linalg as LA
 from itertools import cycle
 from influxdb import InfluxDBClient
 
+import grafana_annotation_server.cli as grafana_annotations
+
 buffer = []
 
 class Influx(object):
@@ -818,6 +820,11 @@ def scratch_3():
     # cy.set_ylim([-5, 5])
     # cz.set_ylim([-5, 5])
     plt.show()
+
+@main.command()
+@click.argument('annotations_json', type=str)
+def scratch_4(annotations_json):
+    pass
 
 @main.command()
 @click.option('--kernel', '-k', type=str, help='SVC Kernel')
