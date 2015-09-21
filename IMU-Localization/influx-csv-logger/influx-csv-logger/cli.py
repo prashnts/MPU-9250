@@ -165,6 +165,9 @@ class Influx(object):
         out = self._measurement(name, kwargs).get_points()
         return self._flatten(out)
 
+    def push_back(self, name):
+        pass
+
 class UDP(socketserver.DatagramRequestHandler):
     """
     Retrieves and Logs the UDP Datagram packets through local Broadcast to the InfluxDB instance.
