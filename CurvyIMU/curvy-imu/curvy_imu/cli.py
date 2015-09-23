@@ -86,6 +86,20 @@ def log_csv(csv):
         click.secho('\rLogging: {0}'.format(next(Helper.pool)), nl = False)
 
 @main.command()
+@click.argument('json_dump', type = click.File('r'))
+def influx_import(json_dump):
+    """
+
+    """
+
+    influx_client = Influx()
+    if (influx_client.import_json(json_dump)):
+        click.echo("Import Successful")
+
+    else:
+        click.echo("Import Unsuccessful")
+
+@main.command()
 # @click.argument('csv1', type = click.File('r'))
 # @click.argument('csv2', type = click.File('r'))
 def scratch():

@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import json
+import click
+
 from influxdb import InfluxDBClient
+from .helper import Helper
 
 class Influx(object):
     """
@@ -12,6 +16,7 @@ class Influx(object):
         """
         """
         self.client = InfluxDBClient('localhost', 8086, 'root', 'root', 'imu_data')
+        self._init_client()
 
     def _flatten(self, dat):
         """
@@ -79,6 +84,20 @@ class Influx(object):
 
         return self.client.query(q)
 
+    def _init_client(self):
+        json_body = [{
+            "measurement": "meta",
+            "fields": {
+                "type": "Login"
+            }
+        }]
+        try:
+            self.client.write_points(json_body)
+        except Exception:
+            self.client.create_database('imu_data')
+            self.client.write_points(json_body)
+            click.echo("Created a New Database `imu_data`.")
+
     def write(self, dat, data_class):
         """
         Logs `dat` to the InfluxDB database.
@@ -144,5 +163,35 @@ class Influx(object):
         out = self._measurement(name, kwargs).get_points()
         return self._flatten(out)
 
-    def push_back(self, name):
-        pass
+    def import_json(self, file_handle, relative_time = True):
+        """
+        """
+        try:
+            dat = json.loads(file_handle.read())
+
+            for result in dat['results']:
+                for series in result['series']:
+                    col = series['columns']
+                    tags = series['tags']
+                    name = series['name']
+
+                    for i in series['values']:
+                        json_body = [{
+                            "measurement": name,
+                            "tags": tags,
+                            "time": i[0],
+                            "fields": {
+                                _: float(__) for (_, __) in zip(col[1:], i[1:])
+                            }
+                        }]
+                        self.client.write_points(json_body)
+                        click.echo('\rImporting: {0}'.format(next(Helper.pool)), nl = False)
+            return True
+
+        except json.decoder.JSONDecodeError:
+            click.echo("Invalid JSON.")
+
+        except Exception as e:
+            click.echo("ERR:" + str(e))
+
+        return False
