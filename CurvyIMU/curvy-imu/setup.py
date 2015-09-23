@@ -22,6 +22,7 @@ setup(
     entry_points={
         'console_scripts': [
             'curvy-imu = curvy_imu.cli:main',
+            'curvy = curvy_imu.scratch:main',
         ],
     },
     classifiers=[
