@@ -69,7 +69,7 @@ class Annotation(object):
         self._data["modified"] = time.time()
 
         with open(self._file_name, "w") as minion:
-            click.echo("Ran dump Routine")
+            click.echo("Dumped")
             minion.write(json.dumps(self._data, indent = 4))
 
 app = Flask(__name__)

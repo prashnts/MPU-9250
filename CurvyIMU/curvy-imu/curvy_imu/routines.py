@@ -171,4 +171,4 @@ class Routines(object):
         eig_val, eig_vec = LA.eig([ampl, phase, ve_sh])
         #eig_val = [np.var(ampl), np.var(phase), np.var(ph_sh)]
 
-        return [np.absolute(_) for _ in eig_val[0:2]] + [sum(energy) / 16]
+        return [np.absolute(_) for _ in eig_val] + [sum(energy) / 16]
