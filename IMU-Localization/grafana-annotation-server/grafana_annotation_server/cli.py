@@ -41,6 +41,29 @@ def setInterval(interval):
     return decorator
 
 class Annotation(object):
+    """
+    Annotation loader and object.
+    This class handles the creation and updation of the Annotation files. The Annotations are stored as plaintext json objects.
+
+    Usage:
+        Log Annotations:
+            annotation_db = Annotation(file_name)
+            annotation_db.dump()
+            payload = {
+                "target_class": <value>,
+                "time_range": [<from>, <to>],
+                "source_class": <source>
+            }
+            annotation_db.log(**payload)
+
+        Retrieve Annotations:
+            annotation_db = Annotation(file_name)
+            annotation_db.get(key1)
+            annotation_db.get(key2)
+
+    Internal Methods:
+        _load: Loads or creates the JSON Annotation DB.
+    """
 
     def __init__(self, file_name):
         """

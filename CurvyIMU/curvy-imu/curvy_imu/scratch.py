@@ -20,6 +20,8 @@ from .influx import Influx
 from .helper import Helper
 from .routines import Routines
 
+from grafana_annotation_server.cli import Annotation
+
 buffer = []
 
 @click.group()
