@@ -7,8 +7,26 @@ from flask import Flask, render_template, request, jsonify
 from flask.ext.cors import CORS
 
 def setInterval(interval):
+    """
+    Decorator generator. Calls the decorated methods every `interval` seconds.
+
+    Args:
+        interval (int): Period
+
+    Returns:
+        (function) Decorated Function.
+    """
+
     def decorator(function):
+        """
+        Helper method.
+        """
+
         def wrapper(*args, **kwargs):
+            """
+            Manages the thread.
+            """
+
             stopped = threading.Event()
 
             def loop(): # executed in another thread
@@ -28,7 +46,7 @@ class Annotation(object):
         """
         """
         self._file_name = file_name
-        self.load()
+        self._load()
 
     def log(self, target_class, time_range, source_class):
         """
@@ -38,7 +56,7 @@ class Annotation(object):
         else:
             self._data["annotations"][target_class] = [[time_range, source_class]]
 
-    def load(self):
+    def _load(self):
         """
         """
         def schema():
@@ -71,6 +89,12 @@ class Annotation(object):
         with open(self._file_name, "w") as minion:
             click.echo("Dumped")
             minion.write(json.dumps(self._data, indent = 4))
+
+    def get(self, key):
+        """
+        """
+
+        return self._data['annotations'][key] if key in self._data['annotations'] else list()
 
 app = Flask(__name__)
 CORS(app)
