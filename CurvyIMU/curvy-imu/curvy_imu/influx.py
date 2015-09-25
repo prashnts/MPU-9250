@@ -3,6 +3,7 @@
 
 import json
 import click
+import time
 
 from influxdb import InfluxDBClient
 from .helper import Helper
@@ -196,5 +197,14 @@ class Influx(object):
 
         return False
 
-    def probe_annotations(self, ):
-        pass
+    def probe_annotation(self, name, annotation_dict, *args, **kwargs):
+        """
+        Returns annotation data dicts.
+        """
+
+        time_format = lambda x: time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(float(x) / 1000))
+
+        for time_range in annotation_dict:
+            kwargs['time_lower'] = time_format(time_range[0])
+            kwargs['time_upper'] = time_format(time_range[1])
+            yield self.probe(name, **kwargs)

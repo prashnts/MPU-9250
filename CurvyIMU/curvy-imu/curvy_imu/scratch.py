@@ -130,7 +130,13 @@ def scratch_3():
 def scratch(annotation_db):
 
     annotations = Annotation(annotation_db)
-    print(list(annotations.get('transition_2509')))
+    #print(list(annotations.get('transition_2509')))
+
+    idb = Influx()
+
+    for i in idb.probe_annotation('accelerometer', annotations.get('transition_2509')):
+        print(len(list(i)))
+        #pass
 
     # fig = plt.figure()
     # ax = fig.add_subplot(111, projection='3d')
