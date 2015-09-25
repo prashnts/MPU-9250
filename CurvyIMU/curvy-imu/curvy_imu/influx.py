@@ -195,3 +195,6 @@ class Influx(object):
             click.echo("ERR:" + str(e))
 
         return False
+
+    def probe_annotations(self, ):
+        pass

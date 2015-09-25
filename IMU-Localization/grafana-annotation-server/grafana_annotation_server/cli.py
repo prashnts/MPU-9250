@@ -117,7 +117,10 @@ class Annotation(object):
         """
         """
 
-        return self._data['annotations'][key] if key in self._data['annotations'] else list()
+        dat = self._data['annotations'][key] if key in self._data['annotations'] else list()
+
+        for _ in dat:
+            yield _[0]
 
 app = Flask(__name__)
 CORS(app)

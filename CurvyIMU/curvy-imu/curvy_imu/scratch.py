@@ -130,7 +130,7 @@ def scratch_3():
 def scratch(annotation_db):
 
     annotations = Annotation(annotation_db)
-    print(annotations.get('transition_2509'))
+    print(list(annotations.get('transition_2509')))
 
     # fig = plt.figure()
     # ax = fig.add_subplot(111, projection='3d')
