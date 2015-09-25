@@ -126,51 +126,53 @@ def scratch_3():
 
 
 @main.command()
-# @click.argument('csv1', type = click.File('r'))
-# @click.argument('csv2', type = click.File('r'))
-def scratch():
+@click.argument('annotation_db', type=str)
+def scratch(annotation_db):
 
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
+    annotations = Annotation(annotation_db)
+    print(annotations.get('transition_2509'))
 
-    idb = Influx()
+    # fig = plt.figure()
+    # ax = fig.add_subplot(111, projection='3d')
 
-    click.echo("😐  Loading the data from influxdb.")
-    lim = 50
-    offset = 0
+    # idb = Influx()
 
-    static = list(zip(*idb.probe('accelerometer', limit = lim, offset = offset, tag = 'static_9_sep_1534')))
-    walk   = list(zip(*idb.probe('accelerometer', limit = lim, offset = offset, tag = 'walk_9_sep_1511')))
-    run   = list(zip(*idb.probe('accelerometer', limit = lim, offset = offset, tag = 'run_9_sep_1505')))
+    # click.echo("😐  Loading the data from influxdb.")
+    # lim = 50
+    # offset = 0
 
-    static_ftr = list(Routines.sep_15_2332(*static))
-    walk_ftr = list(Routines.sep_15_2332(*walk))
-    run_ftr = list(Routines.sep_15_2332(*run))
+    # static = list(zip(*idb.probe('accelerometer', limit = lim, offset = offset, tag = 'static_9_sep_1534')))
+    # walk   = list(zip(*idb.probe('accelerometer', limit = lim, offset = offset, tag = 'walk_9_sep_1511')))
+    # run   = list(zip(*idb.probe('accelerometer', limit = lim, offset = offset, tag = 'run_9_sep_1505')))
 
-    click.echo("😣  Flattening features.")
+    # static_ftr = list(Routines.sep_15_2332(*static))
+    # walk_ftr = list(Routines.sep_15_2332(*walk))
+    # run_ftr = list(Routines.sep_15_2332(*run))
 
-    svm_static_val = list(static_ftr)
-    svm_walk_val   = list(walk_ftr)
-    svm_run_val    = list(run_ftr)
+    # click.echo("😣  Flattening features.")
 
-    lim = min(len(svm_static_val), len(svm_walk_val), len(svm_run_val))
+    # svm_static_val = list(static_ftr)
+    # svm_walk_val   = list(walk_ftr)
+    # svm_run_val    = list(run_ftr)
 
-    click.echo("😐  Plotting features.")
+    # lim = min(len(svm_static_val), len(svm_walk_val), len(svm_run_val))
 
-    for i in svm_static_val[:lim]:
-        ax.scatter(*i[1:3], c = 'b', marker = 'p')
+    # click.echo("😐  Plotting features.")
 
-    for i in svm_walk_val[:lim]:
-        ax.scatter(*i[1:3], c = 'r', marker = '*')
+    # for i in svm_static_val[:lim]:
+    #     ax.scatter(*i[1:3], c = 'b', marker = 'p')
 
-    for i in svm_run_val[:lim]:
-        ax.scatter(*i[1:3], c = 'g', marker = 'o')
+    # for i in svm_walk_val[:lim]:
+    #     ax.scatter(*i[1:3], c = 'r', marker = '*')
 
-    ax.set_xlim([0, 10])
-    ax.set_ylim([0, 10])
-    #ax.set_zlim([0, 10])
-    ax.set_xlabel('X Label')
-    ax.set_ylabel('Y Label')
-    ax.set_zlabel('Z Label')
+    # for i in svm_run_val[:lim]:
+    #     ax.scatter(*i[1:3], c = 'g', marker = 'o')
 
-    plt.show()
+    # ax.set_xlim([0, 10])
+    # ax.set_ylim([0, 10])
+    # #ax.set_zlim([0, 10])
+    # ax.set_xlabel('X Label')
+    # ax.set_ylabel('Y Label')
+    # ax.set_zlabel('Z Label')
+
+    # plt.show()
