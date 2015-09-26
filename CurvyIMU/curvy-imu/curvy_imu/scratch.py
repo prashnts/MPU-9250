@@ -14,6 +14,8 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from sklearn.svm import SVC
 from sklearn.decomposition import PCA
+from numpy import linalg as LA
+from scipy.optimize import curve_fit
 
 from .udp import UDP
 from .influx import Influx
@@ -99,29 +101,9 @@ def scratch_3():
     bx.plot([_[2] for _ in walk_ftr])
     bx.plot([_[2] for _ in run_ftr])
 
-
-
-    # ax.plot(static[0])
-    # ay.plot(static[1])
-    # az.plot(static[2])
-
-    # bx.plot(walk[0])
-    # by.plot(walk[1])
-    # bz.plot(walk[2])
-
-    # cx.plot(run[0])
-    # cy.plot(run[1])
-    # cz.plot(run[2])
-
     ax.set_ylim([0, 30])
     ay.set_ylim([0, 5])
     az.set_ylim([0, 5])
-    # bx.set_ylim([-5, 5])
-    # by.set_ylim([-5, 5])
-    # bz.set_ylim([-5, 5])
-    # cx.set_ylim([-5, 5])
-    # cy.set_ylim([-5, 5])
-    # cz.set_ylim([-5, 5])
     plt.show()
 
 
@@ -130,55 +112,21 @@ def scratch_3():
 def scratch(annotation_db):
 
     annotations = Annotation(annotation_db)
-    #print(list(annotations.get('transition_2509')))
 
     idb = Influx()
 
+    fig = plt.figure()
+    ax = fig.add_subplot(221)
+    ay = fig.add_subplot(222)
+    az = fig.add_subplot(223)
+
+    f = lambda x, a, b, c, d, q, w, e: (a * np.sin(b * x + c) + d + q * np.arctan(w * x + e))
+    f = lambda x, d, q, w, e: d + q * np.arctan(w * x + e)
+
     for i in idb.probe_annotation('accelerometer', annotations.get('transition_2509')):
-        print(len(list(i)))
-        #pass
+        x, y, z = zip(*i)
+        ax.plot(x)
+        # ax.plot(y)
+        # ax.plot(z)
 
-    # fig = plt.figure()
-    # ax = fig.add_subplot(111, projection='3d')
-
-    # idb = Influx()
-
-    # click.echo("😐  Loading the data from influxdb.")
-    # lim = 50
-    # offset = 0
-
-    # static = list(zip(*idb.probe('accelerometer', limit = lim, offset = offset, tag = 'static_9_sep_1534')))
-    # walk   = list(zip(*idb.probe('accelerometer', limit = lim, offset = offset, tag = 'walk_9_sep_1511')))
-    # run   = list(zip(*idb.probe('accelerometer', limit = lim, offset = offset, tag = 'run_9_sep_1505')))
-
-    # static_ftr = list(Routines.sep_15_2332(*static))
-    # walk_ftr = list(Routines.sep_15_2332(*walk))
-    # run_ftr = list(Routines.sep_15_2332(*run))
-
-    # click.echo("😣  Flattening features.")
-
-    # svm_static_val = list(static_ftr)
-    # svm_walk_val   = list(walk_ftr)
-    # svm_run_val    = list(run_ftr)
-
-    # lim = min(len(svm_static_val), len(svm_walk_val), len(svm_run_val))
-
-    # click.echo("😐  Plotting features.")
-
-    # for i in svm_static_val[:lim]:
-    #     ax.scatter(*i[1:3], c = 'b', marker = 'p')
-
-    # for i in svm_walk_val[:lim]:
-    #     ax.scatter(*i[1:3], c = 'r', marker = '*')
-
-    # for i in svm_run_val[:lim]:
-    #     ax.scatter(*i[1:3], c = 'g', marker = 'o')
-
-    # ax.set_xlim([0, 10])
-    # ax.set_ylim([0, 10])
-    # #ax.set_zlim([0, 10])
-    # ax.set_xlabel('X Label')
-    # ax.set_ylabel('Y Label')
-    # ax.set_zlabel('Z Label')
-
-    # plt.show()
+    plt.show()

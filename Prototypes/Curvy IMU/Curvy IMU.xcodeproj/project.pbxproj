@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2B2012EF1BB679C10001C19B /* IMUDataModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B2012EE1BB679C10001C19B /* IMUDataModel.swift */; settings = {ASSET_TAGS = (); }; };
+		2B2012F31BB682170001C19B /* MotionKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B2012F21BB682170001C19B /* MotionKit.swift */; settings = {ASSET_TAGS = (); }; };
 		2BAB4AC01BB59B04001E809B /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BAB4ABF1BB59B04001E809B /* AppDelegate.swift */; };
 		2BAB4AC21BB59B04001E809B /* FirstViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BAB4AC11BB59B04001E809B /* FirstViewController.swift */; };
 		2BAB4AC41BB59B04001E809B /* SecondViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BAB4AC31BB59B04001E809B /* SecondViewController.swift */; };
@@ -16,6 +18,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		2B2012EE1BB679C10001C19B /* IMUDataModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IMUDataModel.swift; sourceTree = "<group>"; };
+		2B2012F21BB682170001C19B /* MotionKit.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MotionKit.swift; sourceTree = "<group>"; };
 		2BAB4ABC1BB59B04001E809B /* Curvy IMU.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Curvy IMU.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		2BAB4ABF1BB59B04001E809B /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		2BAB4AC11BB59B04001E809B /* FirstViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstViewController.swift; sourceTree = "<group>"; };
@@ -57,8 +61,10 @@
 			isa = PBXGroup;
 			children = (
 				2BAB4ABF1BB59B04001E809B /* AppDelegate.swift */,
+				2B2012EE1BB679C10001C19B /* IMUDataModel.swift */,
 				2BAB4AC11BB59B04001E809B /* FirstViewController.swift */,
 				2BAB4AC31BB59B04001E809B /* SecondViewController.swift */,
+				2B2012F21BB682170001C19B /* MotionKit.swift */,
 				2BAB4AC51BB59B04001E809B /* Main.storyboard */,
 				2BAB4AC81BB59B04001E809B /* Assets.xcassets */,
 				2BAB4ACA1BB59B04001E809B /* LaunchScreen.storyboard */,
@@ -147,8 +153,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				2BAB4AC41BB59B04001E809B /* SecondViewController.swift in Sources */,
+				2B2012F31BB682170001C19B /* MotionKit.swift in Sources */,
 				2BAB4AC01BB59B04001E809B /* AppDelegate.swift in Sources */,
 				2BAB4AC21BB59B04001E809B /* FirstViewController.swift in Sources */,
+				2B2012EF1BB679C10001C19B /* IMUDataModel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -304,6 +312,7 @@
 				2BAB4AD21BB59B04001E809B /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
