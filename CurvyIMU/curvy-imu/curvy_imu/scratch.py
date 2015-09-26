@@ -123,6 +123,11 @@ def scratch(annotation_db):
     f = lambda x, a, b, c, d, q, w, e: (a * np.sin(b * x + c) + d + q * np.arctan(w * x + e))
     f = lambda x, d, q, w, e: d + q * np.arctan(w * x + e)
 
+    trans  = idb.probe_annotation('accelerometer', annotations.get('transition_2509')
+    static = idb.probe_annotation('accelerometer', annotations.get('static_2609')
+    walk   = idb.probe_annotation('accelerometer', annotations.get('walk_2509')
+    run    = idb.probe_annotation('accelerometer', annotations.get('run_2609')
+
     for i in idb.probe_annotation('accelerometer', annotations.get('transition_2509')):
         x, y, z = zip(*i)
         ax.plot(x)

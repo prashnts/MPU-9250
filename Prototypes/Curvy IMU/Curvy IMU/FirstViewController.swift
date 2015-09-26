@@ -10,9 +10,19 @@ import UIKit
 
 class FirstViewController: UIViewController {
 
+    @IBOutlet weak var axx: UILabel!
+
+    func update_label(dat: [String: Double]) {
+        axx.text = String(dat["Accel_X"])
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
+        let probe: IMUData = IMUData(obs: self.update_label)
+
+        probe.log()
+        
     }
 
     override func didReceiveMemoryWarning() {
