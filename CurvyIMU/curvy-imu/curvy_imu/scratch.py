@@ -120,13 +120,47 @@ def scratch(annotation_db):
     ay = fig.add_subplot(222)
     az = fig.add_subplot(223)
 
-    f = lambda x, a, b, c, d, q, w, e: (a * np.sin(b * x + c) + d + q * np.arctan(w * x + e))
-    f = lambda x, d, q, w, e: d + q * np.arctan(w * x + e)
+    trans  = idb.probe_annotation('accelerometer',
+                                  annotations.get('transition_2509'))
+    static = idb.probe_annotation('accelerometer', annotations.get('static_2609'))
+    walk   = idb.probe_annotation('accelerometer', annotations.get('walk_2509'))
+    run    = idb.probe_annotation('accelerometer', annotations.get('run_2609'))
 
-    trans  = idb.probe_annotation('accelerometer', annotations.get('transition_2509')
-    static = idb.probe_annotation('accelerometer', annotations.get('static_2609')
-    walk   = idb.probe_annotation('accelerometer', annotations.get('walk_2509')
-    run    = idb.probe_annotation('accelerometer', annotations.get('run_2609')
+    #: Taking some chunks from walking data for Sine Approximation.
+
+    walk_x, walk_y, walk_z = zip(*next(run)) #: x, y, z
+    walk_x, walk_y, walk_z = zip(*next(run)) #: x, y, z
+    walk_x, walk_y, walk_z = zip(*next(run)) #: x, y, z
+    walk_x, walk_y, walk_z = zip(*next(run)) #: x, y, z
+    walk_x_o = list(zip(*[walk_x[_:] for _ in range(16)]))
+
+    tespar = walk_x_o[80]
+
+    maxv = max(tespar)
+    minv = min(tespar)
+    rng  = abs(maxv - minv)
+    men  = sum(tespar) / len(tespar)
+
+    tb = lambda x: maxv if x > men else minv if x < men else men
+
+    c = [tb(_) for _ in tespar]
+
+    sf = lambda x: rng * np.sin(x) + men
+
+    d = [sf(_) for _ in range(len(tespar))]
+
+    # ax.plot([max(tespar)] * 16)
+    # ax.plot([min(tespar)] * 16)
+    #ax.plot([men] * 16)
+    ax.plot(c)
+    #ax.plot(d)
+    ax.plot(tespar)
+
+    ax.set_ylim([-4, 4])
+    plt.show()
+
+    return
+
 
     for i in idb.probe_annotation('accelerometer', annotations.get('transition_2509')):
         x, y, z = zip(*i)
