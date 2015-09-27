@@ -151,3 +151,28 @@ class Helper(object):
             return (b * d * x - a * np.cos(b * x + c)) * np.sign(a * np.sin(b * x + c) + d) / d
 
         return abs(int_sine(n) - int_sine(m))
+
+class Stupidity(object):
+    """
+    Stupid Curve Approximation Methods, and Evaluations.
+    """
+
+    @staticmethod
+    def sine_fit(val):
+        """
+        Approximates the Parameters for:
+            f(x) = asin(bx + c) + d
+        """
+
+        #: Vertical Shift -> Mean
+        d = sum(val) / len(val)
+
+        #: Finds the number of oscillations (switches) from the mean axis. This estimates b.
+        oscln = lambda x: x[0] > d > x[1] if x[0] > x[1] else x[1] > d > x[0]
+        osc_cnt = list(map(oscln, zip(val[0::], val[1::]))).count(True)
+        b = (osc_cnt * np.pi) / len(val)
+
+        a = min([max(val) - d, d - min(val)])
+        c = np.arcsin(-d / a)
+
+        return a, b, c, d

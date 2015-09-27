@@ -20,6 +20,7 @@ from scipy.optimize import curve_fit
 from .udp import UDP
 from .influx import Influx
 from .helper import Helper
+from .helper import Stupidity
 from .routines import Routines
 
 from grafana_annotation_server.cli import Annotation
@@ -132,28 +133,43 @@ def scratch(annotation_db):
     walk_x, walk_y, walk_z = zip(*next(run)) #: x, y, z
     walk_x, walk_y, walk_z = zip(*next(run)) #: x, y, z
     walk_x, walk_y, walk_z = zip(*next(run)) #: x, y, z
-    walk_x_o = list(zip(*[walk_x[_:] for _ in range(16)]))
+    walk_x_o = list(zip(*[walk_x[_:] for _ in range(24)]))
 
-    tespar = walk_x_o[80]
+    tespar = walk_x_o[30]
 
     maxv = max(tespar)
     minv = min(tespar)
-    rng  = abs(maxv - minv)
     men  = sum(tespar) / len(tespar)
+    print([maxv - men, men - minv])
+    rng  = min([maxv - men, men - minv])
+
 
     tb = lambda x: maxv if x > men else minv if x < men else men
 
+    pairs = zip(tespar[0::], tespar[1::])
+
+    bb = lambda x: x[0] > men > x[1] if x[0] > x[1] else x[1] > men > x[0]
+
+    coun = list(map(bb, pairs)).count(True) #: Counts of number of "Switches"
+
+
+
     c = [tb(_) for _ in tespar]
 
-    sf = lambda x: rng * np.sin(x) + men
+    _a = rng
+    _b = (coun * np.pi) / len (tespar)
+    _d = men
+    _c = np.arcsin(-_d / _a)
+
+    sf = lambda x: _a * np.sin(_b * x + _c) +_d
 
     d = [sf(_) for _ in range(len(tespar))]
 
     # ax.plot([max(tespar)] * 16)
     # ax.plot([min(tespar)] * 16)
-    #ax.plot([men] * 16)
-    ax.plot(c)
-    #ax.plot(d)
+    ax.plot([men] * 24)
+    # ax.plot(c)
+    ax.plot(d)
     ax.plot(tespar)
 
     ax.set_ylim([-4, 4])
