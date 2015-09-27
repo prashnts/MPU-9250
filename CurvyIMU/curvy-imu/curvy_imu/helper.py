@@ -170,9 +170,29 @@ class Stupidity(object):
         #: Finds the number of oscillations (switches) from the mean axis. This estimates b.
         oscln = lambda x: x[0] > d > x[1] if x[0] > x[1] else x[1] > d > x[0]
         osc_cnt = list(map(oscln, zip(val[0::], val[1::]))).count(True)
-        b = (osc_cnt * np.pi) / len(val)
+        b = (osc_cnt * np.pi) / (1 * len(val))
+
+        up_m = [_ for _ in val if _ > d]
+        dn_m = [_ for _ in val if _ < d]
+
+        up_mean = sum(up_m) / len(up_m)
+        dn_mean = sum(dn_m) / len(dn_m)
+
+        print(up_mean - d)
+        print(d - dn_mean)
 
         a = min([max(val) - d, d - min(val)])
+
+        #a = min([up_mean - d, d - dn_mean])
+        print(-d / a)
+
         c = np.arcsin(-d / a)
 
         return a, b, c, d
+
+    @staticmethod
+    def arctan_fit(val):
+        """
+        """
+
+
