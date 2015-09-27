@@ -198,7 +198,7 @@ class Stupidity(object):
         l = int(len(val) / 3)
 
         c1, c2, c3 = val[:l], val[l:len(val) - l], val[len(val) - l:]
-        m1, m3 = np.mean(c1), np.mean(c3)
+        m1, m2, m3 = np.mean(c1), np.mean(c2), np.mean(c3)
 
         a = (m3 - m1) / 2
         b = 0
@@ -206,3 +206,12 @@ class Stupidity(object):
         d = np.mean(val)
 
         return (lambda x: a * np.arctan(x - c) + d, [a, b, c, d])
+
+    @staticmethod
+    def line_fit(val):
+        """
+        """
+
+        c = np.mean(val)
+
+        return (lambda x: x + c, [c])

@@ -133,9 +133,9 @@ def scratch(annotation_db):
     walk_x, walk_y, walk_z = zip(*next(run)) #: x, y, z
     walk_x, walk_y, walk_z = zip(*next(run)) #: x, y, z
     walk_x, walk_y, walk_z = zip(*next(trans)) #: x, y, z
-    walk_x_o = list(zip(*[walk_y[_:] for _ in range(24)]))
+    walk_x_o = list(zip(*[walk_y[_:] for _ in range(16)]))
 
-    tespar = walk_x_o[10]
+    tespar = walk_x_o[10][::-1]
 
     sine_f = lambda x, a, b, c, d: a * np.sin(b * x + c) +d
     fit2 = Helper.curve_fit(sine_f, tespar)
