@@ -188,11 +188,21 @@ class Stupidity(object):
 
         c = np.arcsin(-d / a)
 
-        return a, b, c, d
+        return (lambda x: a * np.sin(b * x + c) + d, [a, b, c, d])
 
     @staticmethod
     def arctan_fit(val):
         """
         """
 
+        l = int(len(val) / 3)
 
+        c1, c2, c3 = val[:l], val[l:len(val) - l], val[len(val) - l:]
+        m1, m3 = np.mean(c1), np.mean(c3)
+
+        a = (m3 - m1) / 2
+        b = 0
+        c = int(len(val) / 2)
+        d = np.mean(val)
+
+        return (lambda x: a * np.arctan(x - c) + d, [a, b, c, d])

@@ -138,13 +138,12 @@ def scratch(annotation_db):
     tespar = walk_x_o[10]
 
     sine_f = lambda x, a, b, c, d: a * np.sin(b * x + c) +d
-    fit1 = Stupidity.sine_fit(tespar)
     fit2 = Helper.curve_fit(sine_f, tespar)
-    print(fit1)
     print(fit2)
 
-    v = [sine_f(_, *fit1) for _ in range(len(tespar))]
-    v1 = [sine_f(_, *fit2) for _ in range(len(tespar))]
+    v = [Stupidity.sine_fit(tespar)[0](_) for _ in range(len(tespar))]
+    v1 = [Stupidity.arctan_fit(tespar)[0](_) for _ in range(len(tespar))]
+    #v1 = [sine_f(_, *fit2) for _ in range(len(tespar))]
 
     # ax.plot([men] * 24)
     # ax.plot(c)
