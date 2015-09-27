@@ -143,12 +143,14 @@ def scratch(annotation_db):
 
     v = [Stupidity.sine_fit(tespar)[0](_) for _ in range(len(tespar))]
     v1 = [Stupidity.arctan_fit(tespar)[0](_) for _ in range(len(tespar))]
+    v2 = [Stupidity.line_fit(tespar)[0](_) for _ in range(len(tespar))]
     #v1 = [sine_f(_, *fit2) for _ in range(len(tespar))]
 
     # ax.plot([men] * 24)
     # ax.plot(c)
     ax.plot(v)
     ax.plot(v1)
+    ax.plot(v2)
     ax.plot(tespar)
 
     ax.set_ylim([-4, 4])

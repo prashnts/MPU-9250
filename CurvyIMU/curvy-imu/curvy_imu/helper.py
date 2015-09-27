@@ -178,13 +178,9 @@ class Stupidity(object):
         up_mean = sum(up_m) / len(up_m)
         dn_mean = sum(dn_m) / len(dn_m)
 
-        print(up_mean - d)
-        print(d - dn_mean)
-
         a = min([max(val) - d, d - min(val)])
 
         #a = min([up_mean - d, d - dn_mean])
-        print(-d / a)
 
         c = np.arcsin(-d / a)
 
@@ -211,7 +207,7 @@ class Stupidity(object):
     def line_fit(val):
         """
         """
-
+        m = 0
         c = np.mean(val)
 
-        return (lambda x: x + c, [c])
+        return (lambda x: c, [m, c])
