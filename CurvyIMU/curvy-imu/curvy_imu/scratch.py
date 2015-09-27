@@ -137,39 +137,19 @@ def scratch(annotation_db):
 
     tespar = walk_x_o[30]
 
-    maxv = max(tespar)
-    minv = min(tespar)
-    men  = sum(tespar) / len(tespar)
-    print([maxv - men, men - minv])
-    rng  = min([maxv - men, men - minv])
+    sine_f = lambda x, a, b, c, d: a * np.sin(b * x + c) +d
+    fit1 = Stupidity.sine_fit(tespar)
+    fit2 = Helper.curve_fit(sine_f, tespar)
+    print(fit1)
+    print(fit2)
 
+    v = [sine_f(_, *fit1) for _ in range(len(tespar))]
+    v1 = [sine_f(_, *fit2) for _ in range(len(tespar))]
 
-    tb = lambda x: maxv if x > men else minv if x < men else men
-
-    pairs = zip(tespar[0::], tespar[1::])
-
-    bb = lambda x: x[0] > men > x[1] if x[0] > x[1] else x[1] > men > x[0]
-
-    coun = list(map(bb, pairs)).count(True) #: Counts of number of "Switches"
-
-
-
-    c = [tb(_) for _ in tespar]
-
-    _a = rng
-    _b = (coun * np.pi) / len (tespar)
-    _d = men
-    _c = np.arcsin(-_d / _a)
-
-    sf = lambda x: _a * np.sin(_b * x + _c) +_d
-
-    d = [sf(_) for _ in range(len(tespar))]
-
-    # ax.plot([max(tespar)] * 16)
-    # ax.plot([min(tespar)] * 16)
-    ax.plot([men] * 24)
+    # ax.plot([men] * 24)
     # ax.plot(c)
-    ax.plot(d)
+    ax.plot(v)
+    ax.plot(v1)
     ax.plot(tespar)
 
     ax.set_ylim([-4, 4])
