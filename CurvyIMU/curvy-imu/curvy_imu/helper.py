@@ -226,8 +226,24 @@ class Stupidity(object):
             P, Q (list or list of touples): Polygon lines 1 and 2. See `remap`.
             remap (bool, default: True): Remaps P and Q, if they are single dimensional points.
         """
+
         def euc_dist(pt1, pt2):
-            return math.sqrt((pt2[0] - pt1[0])**2 + (pt2[1] - pt1[1])**2)
+            """
+            Calculates the Euclidean Distance between n-dimensional vectors pt1 and pt2.
+            Args:
+                pt1, pt2 (list): n-Dimensional Vectors
+            Returns:
+                (float): Euclidean Distance
+            Raises:
+                ValueError: pt1 and pt2 are not comparable.
+            """
+
+            if len(pt1) is not len(pt2):
+                raise ValueError
+
+            coupling = [(ui - vi)**2 for (ui, vi) in zip(pt1, pt2)]
+
+            return math.sqrt(sum(coupling))
 
         def _c(ca, i, j, P, Q):
             if ca[i, j] > -1:
