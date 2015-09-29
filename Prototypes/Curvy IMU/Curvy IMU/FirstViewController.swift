@@ -11,7 +11,9 @@ import UIKit
 class FirstViewController: UIViewController {
 
     @IBOutlet weak var axx: UILabel!
-
+    @IBOutlet weak var indicator: UIActivityIndicatorView!
+    @IBOutlet weak var pinch: UITabBarItem!
+    
     func update_label(dat: [String: Double]) {
         axx.text = String(dat["Accel_X"])
     }

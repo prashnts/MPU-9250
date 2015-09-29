@@ -172,3 +172,78 @@ class Routines(object):
         #eig_val = [np.var(ampl), np.var(phase), np.var(ph_sh)]
 
         return [np.absolute(_) for _ in eig_val] + [sum(energy) / 16]
+
+    @staticmethod
+    def sep_29(x, y, z):
+        """
+        This method creates a feature in Four stages:
+        1. Create overlapping chunks of the x, y, z axis data, 16 length.
+        2. Find Discreet Wave Energy
+        3. Find Sine, Arctan, Line Fit
+        4. Find Frechet Distances
+        5. Find Perimeter
+        6. Normalise DWE, Frechet Distance, and Perimeter
+        7. Combine Feature Axes
+
+        Args:
+            x (list): x axis probe data.
+            y (list): y axis probe data.
+            z (list): z axis probe data.
+
+        Returns:
+            (generator): Feature Vector
+        """
+
+        #: Overlapped x, y, and z axis data.
+        #  Data length -> 16
+        x_o = zip(*[x[_:] for _ in range(16)])
+        y_o = zip(*[y[_:] for _ in range(16)])
+        z_o = zip(*[z[_:] for _ in range(16)])
+
+        #: Gathers row wise data.
+        row = zip(x_o, y_o, z_o)
+
+        for val_set in row:
+            yield Routines.sep_15_2332_feature(val_set)
+
+    @staticmethod
+    def sep_29_feature(val_set):
+        """
+        Supplementary method for method `sep_29`.
+        Performs the subtask 2 to 7 for the previous method.
+
+        Args:
+            val_set (list): List containing the list of chunks of data.
+
+        Returns:
+            (list): Eigenvalues, feature.
+        """
+
+        ftr = []
+        energy = []
+        for col in val_set:
+            #: Curve fit each column to get the period, phase shift, vertical
+            #: shift, and amplitude.
+            try:
+                #: if we find optimal fit, then append.
+                popt = Helper.curve_fit(func, col)
+                energy.append(Helper.discreet_wave_energy(col))
+                ftr.append(popt)
+            except RuntimeError:
+                #: Let it be (TM)
+                #: To keep the structure of the `ftr` intact
+                #  we do this stupid hack.
+                ftr.append([0, 0, 0, 0])
+
+        #: Yield a single feature, combining all of the above
+        ftr_cmb = zip(*ftr)
+
+        ampl  = next(ftr_cmb)   # Amplitude
+        phase = next(ftr_cmb)   # Phase
+        ph_sh = next(ftr_cmb)   # Phase Shift
+        ve_sh = next(ftr_cmb)   # Vertical Shift
+
+        eig_val, eig_vec = LA.eig([ampl, phase, ve_sh])
+        #eig_val = [np.var(ampl), np.var(phase), np.var(ph_sh)]
+
+        return [np.absolute(_) for _ in eig_val] + [sum(energy) / 16]

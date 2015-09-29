@@ -209,6 +209,7 @@ class Stupidity(object):
     @staticmethod
     def line_fit(val):
         """
+        Fits approximate line in
         """
         m = 0
         c = np.mean(val)
@@ -224,7 +225,9 @@ class Stupidity(object):
 
         Args:
             P, Q (list or list of touples): Polygon lines 1 and 2. See `remap`.
-            remap (bool, default: True): Remaps P and Q, if they are single dimensional points.
+            remap (bool, default: True): Remaps P and Q, if they are single dimensional points. If P and Q are touples of coordinates, set this flag to False.
+        Returns:
+            (float): Frechet Distance
         """
 
         def euc_dist(pt1, pt2):
@@ -246,6 +249,10 @@ class Stupidity(object):
             return math.sqrt(sum(coupling))
 
         def _c(ca, i, j, P, Q):
+            """
+            Calculates the infinite norm of matrix `ca` recursively. The norm is the coupling here.
+            """
+
             if ca[i, j] > -1:
                 return ca[i, j]
             elif i == 0 and j == 0:
@@ -264,6 +271,6 @@ class Stupidity(object):
             P = list(zip(range(len(P)), P))
             Q = list(zip(range(len(Q)), Q))
 
-        ca = np.ones((len(P),len(Q)))
-        ca = np.multiply(ca,-1)
-        return _c(ca,len(P)-1,len(Q)-1,P,Q)
+        ca = np.ones((len(P), len(Q)))
+        ca = np.multiply(ca, -1)
+        return _c(ca, len(P) - 1, len(Q) - 1, P, Q)

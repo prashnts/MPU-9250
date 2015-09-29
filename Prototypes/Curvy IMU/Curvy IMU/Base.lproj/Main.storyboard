@@ -2,6 +2,7 @@
 <document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="8191" systemVersion="14F27" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" initialViewController="49e-Tb-3d3">
     <dependencies>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="8154"/>
+        <capability name="Constraints to layout margins" minToolsVersion="6.0"/>
     </dependencies>
     <scenes>
         <!--First-->
@@ -29,29 +30,37 @@
                                 <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
                                 <nil key="highlightedColor"/>
                             </label>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="gkr-Q1-AIl">
-                                <rect key="frame" x="216" y="65" width="168" height="21"/>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="center" lineBreakMode="wordWrap" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="gkr-Q1-AIl">
+                                <rect key="frame" x="74" y="71" width="453" height="21"/>
                                 <constraints>
-                                    <constraint firstAttribute="height" constant="21" id="Egb-h6-EfW"/>
-                                    <constraint firstAttribute="width" constant="168" id="eNi-Mm-KZb"/>
+                                    <constraint firstAttribute="height" constant="21" id="SRb-e0-WTg"/>
                                 </constraints>
-                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <fontDescription key="fontDescription" name="HelveticaNeue" family="Helvetica Neue" pointSize="17"/>
                                 <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
                                 <nil key="highlightedColor"/>
                             </label>
+                            <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" hidesWhenStopped="YES" animating="YES" style="gray" translatesAutoresizingMaskIntoConstraints="NO" id="RLl-Hp-Wvg">
+                                <rect key="frame" x="560" y="71" width="20" height="20"/>
+                            </activityIndicatorView>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+                        <gestureRecognizers/>
                         <constraints>
-                            <constraint firstItem="gkr-Q1-AIl" firstAttribute="centerX" secondItem="tsR-hK-woN" secondAttribute="centerX" id="4cj-r9-cZg"/>
                             <constraint firstAttribute="centerX" secondItem="KQZ-1w-vlD" secondAttribute="centerX" id="6BV-lF-sBN"/>
-                            <constraint firstItem="gkr-Q1-AIl" firstAttribute="centerX" secondItem="tsR-hK-woN" secondAttribute="centerX" id="A5K-BO-y03"/>
-                            <constraint firstItem="gkr-Q1-AIl" firstAttribute="top" secondItem="Ia1-K6-d13" secondAttribute="bottom" constant="45" id="E6F-RI-vZE"/>
+                            <constraint firstItem="gkr-Q1-AIl" firstAttribute="centerX" secondItem="KQZ-1w-vlD" secondAttribute="centerX" id="7Rs-9d-nmh"/>
+                            <constraint firstItem="gkr-Q1-AIl" firstAttribute="leading" secondItem="tsR-hK-woN" secondAttribute="leadingMargin" constant="54" id="U4t-hy-6LV"/>
                             <constraint firstItem="A5M-7J-77L" firstAttribute="top" secondItem="KQZ-1w-vlD" secondAttribute="bottom" constant="8" symbolic="YES" id="cfb-er-3JN"/>
                             <constraint firstItem="A5M-7J-77L" firstAttribute="centerX" secondItem="KQZ-1w-vlD" secondAttribute="centerX" id="e1l-AV-tCB"/>
                             <constraint firstAttribute="centerY" secondItem="KQZ-1w-vlD" secondAttribute="centerY" id="exm-UA-ej4"/>
-                            <constraint firstItem="gkr-Q1-AIl" firstAttribute="centerX" secondItem="KQZ-1w-vlD" secondAttribute="centerX" id="fRA-Zn-laO"/>
-                            <constraint firstItem="gkr-Q1-AIl" firstAttribute="top" secondItem="Ia1-K6-d13" secondAttribute="bottom" constant="45" id="mqw-LL-Dme"/>
+                            <constraint firstItem="RLl-Hp-Wvg" firstAttribute="leading" secondItem="gkr-Q1-AIl" secondAttribute="trailing" constant="33" id="h1F-gf-NN4"/>
+                            <constraint firstItem="gkr-Q1-AIl" firstAttribute="top" secondItem="Ia1-K6-d13" secondAttribute="bottom" constant="51" id="iG7-Ng-5WT"/>
+                            <constraint firstItem="RLl-Hp-Wvg" firstAttribute="top" secondItem="Ia1-K6-d13" secondAttribute="bottom" constant="51" id="jcD-ng-HRQ"/>
+                            <constraint firstAttribute="trailingMargin" secondItem="RLl-Hp-Wvg" secondAttribute="trailing" id="plL-Ln-3gH"/>
+                            <constraint firstAttribute="trailingMargin" secondItem="gkr-Q1-AIl" secondAttribute="trailing" constant="53" id="wbW-De-zvh"/>
                         </constraints>
+                        <connections>
+                            <outletCollection property="gestureRecognizers" destination="sej-kz-yYh" appends="YES" id="Kh2-cy-iX2"/>
+                        </connections>
                     </view>
                     <tabBarItem key="tabBarItem" title="First" image="first" id="acW-dT-cKf"/>
                     <connections>
@@ -59,6 +68,7 @@
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="W5J-7L-Pyd" sceneMemberID="firstResponder"/>
+                <pinchGestureRecognizer id="sej-kz-yYh"/>
             </objects>
             <point key="canvasLocation" x="750" y="-320"/>
         </scene>
