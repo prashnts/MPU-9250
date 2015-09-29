@@ -5,6 +5,7 @@
 """
 
 import numpy as np
+import matplotlib.pyplot as plt
 
 from numpy import linalg as LA
 from scipy.optimize import curve_fit
@@ -205,7 +206,7 @@ class Routines(object):
         row = zip(x_o, y_o, z_o)
 
         for val_set in row:
-            yield Routines.sep_15_2332_feature(val_set)
+            yield Routines.sep_29_feature(val_set)
 
     @staticmethod
     def sep_29_feature(val_set):
@@ -222,36 +223,39 @@ class Routines(object):
 
         ftr = []
         wave_energy = []
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        ax.set_ylim([-4, 4])
+
+        osc = []
         for col in val_set:
-
-            wave_energy.append(Helper.discreet_wave_energy(col))
-
             discreet_fit = [Stupidity.sine_fit(col),
                             Stupidity.arctan_fit(col),
                             Stupidity.line_fit(col)]
 
             w_col   = len(col)
 
-            w_e = Helper.discreet_wave_energy(col) / w_col
+            wave_energy.append(Helper.discreet_wave_energy(col) / w_col)
 
             curves   = [map(_[0],  range(w_col)) for _ in discreet_fit]
             fre_dist = [Stupidity.frechet_dist(list(_), col) for _ in curves]
 
             n_fre_dist = Stupidity.normalise_dist(fre_dist)
 
-            ftr.append([w_e] + n_fre_dist)
+            ftr.append(n_fre_dist)
 
-        return ftr
+            d = np.mean(col)
 
-        #: Yield a single feature, combining all of the above
-        ftr_cmb = zip(*ftr)
+            oscln = lambda x: x[0] > d > x[1] if x[0] > x[1] else x[1] > d > x[0]
+            osc_cnt = list(map(oscln, zip(col[0::], col[1::]))).count(True)
 
-        ampl  = next(ftr_cmb)   # Amplitude
-        phase = next(ftr_cmb)   # Phase
-        ph_sh = next(ftr_cmb)   # Phase Shift
-        ve_sh = next(ftr_cmb)   # Vertical Shift
+            osc.append(osc_cnt)
 
-        eig_val, eig_vec = LA.eig([ampl, phase, ve_sh])
-        #eig_val = [np.var(ampl), np.var(phase), np.var(ph_sh)]
+            ax.plot(col)
+        plt.show()
 
-        return [np.absolute(_) for _ in eig_val] + [sum(energy) / 16]
+        print(np.mean(osc))
+        wave_en = sum(wave_energy) / 3
+        ftr_nml = [max(_) for _ in zip(*ftr)]
+
+        return ftr_nml + [wave_en]

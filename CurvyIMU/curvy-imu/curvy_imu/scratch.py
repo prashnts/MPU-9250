@@ -174,19 +174,125 @@ def scratch(annotation_db):
     plt.show()
 
 @main.command()
-@click.argument('annotation_db', type=str)
-def scratch_two(annotation_db):
+@click.argument('annotation_db',     type = str)
+@click.argument('pickle_svm_object', type = click.File('wb'))
+def scratch_two(annotation_db, pickle_svm_object):
 
     annotations = Annotation(annotation_db)
     idb = Influx()
 
-    click.echo("😐  Loading the data from influxdb.")
+    click.echo("😐  Loading the annotated data from influxdb.")
 
-    trans  = idb.probe_annotation('accelerometer', annotations.get('transition_2509'), True)
+    trans  = idb.probe_annotation('accelerometer', annotations.get('transition_2509'))
     static = idb.probe_annotation('accelerometer', annotations.get('static_2609'))
     walk   = idb.probe_annotation('accelerometer', annotations.get('walk_2509'))
     run    = idb.probe_annotation('accelerometer', annotations.get('run_2609'))
 
+    def create_feature(dat):
+        """
+        """
 
-    for _ in trans:
+        ftr = []
+        for row in dat:
+            ftr.append(Routines.sep_29(*zip(*row)))
+            break
+        return chain(*ftr)
+
+    click.echo("😐  Flattenning Features.")
+
+    tra_f = list(create_feature(trans))
+    sta_f = list(create_feature(static))
+    wal_f = list(create_feature(walk))
+    run_f = list(create_feature(run))
+
+    lim = min([len(tra_f), len(sta_f), len(wal_f), len(run_f)])
+
+    X = tra_f[:lim]
+    Y = [1] * lim
+    X += sta_f[:lim]
+    Y += [2] * lim
+    X += wal_f[:lim]
+    Y += [3] * lim
+    X += run_f[:lim]
+    Y += [4] * lim
+
+    click.echo("😏  Training SVM.")
+
+    support_vector_classifier = SVC(kernel = 'rbf')
+    support_vector_classifier.fit(X, Y)
+
+    click.echo("😄  Dumping SVM Object.")
+
+    pickle.dump(support_vector_classifier, pickle_svm_object)
+
+@main.command()
+@click.argument('annotation_db',     type = str)
+@click.argument('pickled_svm_object', type = click.File('rb'))
+def scratch_three(annotation_db, pickled_svm_object):
+
+    annotations = Annotation(annotation_db)
+    idb = Influx()
+
+    click.echo("😐  Loading the annotated data from influxdb.")
+
+    trans  = idb.probe_annotation('accelerometer', annotations.get('transition_2509'))
+    static = idb.probe_annotation('accelerometer', annotations.get('static_2609'))
+    walk   = idb.probe_annotation('accelerometer', annotations.get('walk_2509'))
+    run    = idb.probe_annotation('accelerometer', annotations.get('run_2609'))
+
+    def create_feature(dat):
+        """
+        """
+
+        ftr = []
+        for row in dat:
+            ftr.append(Routines.sep_29(*zip(*row)))
+            break
+        return chain(*ftr)
+
+    click.echo("😐  Flattenning Features.")
+
+    # tra_f = list(create_feature(trans))
+    # sta_f = list(create_feature(static))
+    # wal_f = list(create_feature(walk))
+    run_f = list(create_feature(run))
+
+    X = run_f[:18]
+
+    support_vector_classifier = pickle.load(pickled_svm_object)
+
+    for i in X:
+        print(support_vector_classifier.predict(i))
+
+@main.command()
+@click.argument('annotation_db',     type = str)
+#@click.argument('pickled_svm_object', type = click.File('rb'))
+def scratch_f(annotation_db):
+
+    annotations = Annotation(annotation_db)
+    idb = Influx()
+
+    click.echo("😐  Loading the annotated data from influxdb.")
+
+    trans  = idb.probe_annotation('accelerometer', annotations.get('transition_2509'))
+    static = idb.probe_annotation('accelerometer', annotations.get('static_2609'))
+    walk   = idb.probe_annotation('accelerometer', annotations.get('walk_2509'))
+    run    = idb.probe_annotation('accelerometer', annotations.get('run_2609'))
+
+    def create_feature(dat):
+        """
+        """
+
+        ftr = []
+        count = 0
+        for row in dat:
+            count += 1
+            if count >= 3:
+                break
+            ftr.append(Routines.sep_29(*zip(*row)))
+        return chain(*ftr)
+
+    fttrans = create_feature(static)
+
+    for _ in fttrans:
         print(_)

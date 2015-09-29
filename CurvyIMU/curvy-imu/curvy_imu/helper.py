@@ -192,7 +192,8 @@ class Stupidity(object):
         a = up_mean - dn_mean
 
         #c = np.arcsin(-d / a)
-        c = 0
+        val_ = list(val)
+        c = val_.index(max(val_))
 
         return (lambda x: a * np.sin(b * x + c) + d, [a, b, c, d])
 
