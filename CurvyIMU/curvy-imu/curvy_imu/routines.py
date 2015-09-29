@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 
 from numpy import linalg as LA
 from scipy.optimize import curve_fit
+from scipy.signal import argrelmax, argrelmin
 
 from .helper import Helper
 from .helper import Stupidity
@@ -198,10 +199,9 @@ class Routines(object):
 
         #: Overlapped x, y, and z axis data.
         #  Data length -> 16
-        x_o = zip(*[x[_:] for _ in range(16)])
-        y_o = zip(*[y[_:] for _ in range(16)])
-        z_o = zip(*[z[_:] for _ in range(16)])
-
+        x_o = list(zip(*[x[_:] for _ in range(64)]))[::10]
+        y_o = list(zip(*[y[_:] for _ in range(64)]))[::10]
+        z_o = list(zip(*[z[_:] for _ in range(64)]))[::10]
         #: Gathers row wise data.
         row = zip(x_o, y_o, z_o)
 
@@ -221,13 +221,14 @@ class Routines(object):
             (list): Eigenvalues, feature.
         """
 
+        print(val_set)
+
         ftr = []
         wave_energy = []
         fig = plt.figure()
         ax = fig.add_subplot(111)
         ax.set_ylim([-4, 4])
 
-        osc = []
         for col in val_set:
             discreet_fit = [Stupidity.sine_fit(col),
                             Stupidity.arctan_fit(col),
@@ -244,17 +245,83 @@ class Routines(object):
 
             ftr.append(n_fre_dist)
 
-            d = np.mean(col)
+            local_maxima = list(argrelmax(np.array(col), order = 5)[0])
+            local_minima = list(argrelmin(np.array(col), order = 5)[0])
 
-            oscln = lambda x: x[0] > d > x[1] if x[0] > x[1] else x[1] > d > x[0]
-            osc_cnt = list(map(oscln, zip(col[0::], col[1::]))).count(True)
+            for _ in local_maxima:
+                ax.scatter(_, col[_], marker = '^')
 
-            osc.append(osc_cnt)
+            for _ in local_minima:
+                ax.scatter(_, col[_], marker = '*')
 
+            #ax.plot([discreet_fit[1][0](_) for _ in range(w_col)])
             ax.plot(col)
+            keypoints = local_minima + local_maxima
+            print(sorted(keypoints))
+
         plt.show()
 
-        print(np.mean(osc))
+
+        wave_en = sum(wave_energy) / 3
+        ftr_nml = [max(_) for _ in zip(*ftr)]
+
+        return ftr_nml + [wave_en]
+
+
+    @staticmethod
+    def sep_29_02_feature(val_set):
+        """
+        Supplementary method for method `sep_29`.
+        Performs the subtask 2 to 7 for the previous method.
+
+        Args:
+            val_set (list): List containing the list of chunks of data.
+
+        Returns:
+            (list): Eigenvalues, feature.
+        """
+
+        print(val_set)
+
+        ftr = []
+        wave_energy = []
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        ax.set_ylim([-4, 4])
+
+        for col in val_set:
+            discreet_fit = [Stupidity.sine_fit(col),
+                            Stupidity.arctan_fit(col),
+                            Stupidity.line_fit(col)]
+
+            w_col   = len(col)
+
+            wave_energy.append(Helper.discreet_wave_energy(col) / w_col)
+
+            curves   = [map(_[0],  range(w_col)) for _ in discreet_fit]
+            fre_dist = [Stupidity.frechet_dist(list(_), col) for _ in curves]
+
+            n_fre_dist = Stupidity.normalise_dist(fre_dist)
+
+            ftr.append(n_fre_dist)
+
+            local_maxima = list(argrelmax(np.array(col), order = 5)[0])
+            local_minima = list(argrelmin(np.array(col), order = 5)[0])
+
+            for _ in local_maxima:
+                ax.scatter(_, col[_], marker = '^')
+
+            for _ in local_minima:
+                ax.scatter(_, col[_], marker = '*')
+
+            #ax.plot([discreet_fit[1][0](_) for _ in range(w_col)])
+            ax.plot(col)
+            keypoints = local_minima + local_maxima
+            print(sorted(keypoints))
+
+        plt.show()
+
+
         wave_en = sum(wave_energy) / 3
         ftr_nml = [max(_) for _ in zip(*ftr)]
 

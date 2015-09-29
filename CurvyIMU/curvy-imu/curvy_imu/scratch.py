@@ -23,6 +23,7 @@ from .influx import Influx
 from .helper import Helper
 from .helper import Stupidity
 from .routines import Routines
+from .samples import *
 
 from grafana_annotation_server.cli import Annotation
 
@@ -265,34 +266,9 @@ def scratch_three(annotation_db, pickled_svm_object):
         print(support_vector_classifier.predict(i))
 
 @main.command()
-@click.argument('annotation_db',     type = str)
 #@click.argument('pickled_svm_object', type = click.File('rb'))
-def scratch_f(annotation_db):
-
-    annotations = Annotation(annotation_db)
-    idb = Influx()
-
-    click.echo("😐  Loading the annotated data from influxdb.")
-
-    trans  = idb.probe_annotation('accelerometer', annotations.get('transition_2509'))
-    static = idb.probe_annotation('accelerometer', annotations.get('static_2609'))
-    walk   = idb.probe_annotation('accelerometer', annotations.get('walk_2509'))
-    run    = idb.probe_annotation('accelerometer', annotations.get('run_2609'))
-
-    def create_feature(dat):
-        """
-        """
-
-        ftr = []
-        count = 0
-        for row in dat:
-            count += 1
-            if count >= 3:
-                break
-            ftr.append(Routines.sep_29(*zip(*row)))
-        return chain(*ftr)
-
-    fttrans = create_feature(static)
-
-    for _ in fttrans:
-        print(_)
+def scratch_f():
+    Routines.sep_29_02_feature(s_static)
+    Routines.sep_29_02_feature(s_walk)
+    Routines.sep_29_02_feature(s_run)
+    Routines.sep_29_02_feature(s_trans)

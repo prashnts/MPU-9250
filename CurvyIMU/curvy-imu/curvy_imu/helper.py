@@ -207,10 +207,12 @@ class Stupidity(object):
         c1, c2, c3 = val[:l], val[l:len(val) - l], val[len(val) - l:]
         m1, m2, m3 = np.mean(c1), np.mean(c2), np.mean(c3)
 
+        print(m1, m2, m3)
+
         a = (m3 - m1) / 2
         b = 0
         c = int(len(val) / 2)
-        d = np.mean(val)
+        d = m1 - m3
 
         return (lambda x: a * np.arctan(x - c) + d, [a, b, c, d])
 
