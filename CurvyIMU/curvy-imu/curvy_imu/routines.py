@@ -10,6 +10,7 @@ from numpy import linalg as LA
 from scipy.optimize import curve_fit
 
 from .helper import Helper
+from .helper import Stupidity
 
 class Routines(object):
     """
@@ -220,20 +221,27 @@ class Routines(object):
         """
 
         ftr = []
-        energy = []
+        wave_energy = []
         for col in val_set:
-            #: Curve fit each column to get the period, phase shift, vertical
-            #: shift, and amplitude.
-            try:
-                #: if we find optimal fit, then append.
-                popt = Helper.curve_fit(func, col)
-                energy.append(Helper.discreet_wave_energy(col))
-                ftr.append(popt)
-            except RuntimeError:
-                #: Let it be (TM)
-                #: To keep the structure of the `ftr` intact
-                #  we do this stupid hack.
-                ftr.append([0, 0, 0, 0])
+
+            wave_energy.append(Helper.discreet_wave_energy(col))
+
+            discreet_fit = [Stupidity.sine_fit(col),
+                            Stupidity.arctan_fit(col),
+                            Stupidity.line_fit(col)]
+
+            w_col   = len(col)
+
+            w_e = Helper.discreet_wave_energy(col) / w_col
+
+            curves   = [map(_[0],  range(w_col)) for _ in discreet_fit]
+            fre_dist = [Stupidity.frechet_dist(list(_), col) for _ in curves]
+
+            n_fre_dist = Stupidity.normalise_dist(fre_dist)
+
+            ftr.append([w_e] + n_fre_dist)
+
+        return ftr
 
         #: Yield a single feature, combining all of the above
         ftr_cmb = zip(*ftr)

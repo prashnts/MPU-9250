@@ -6,6 +6,7 @@ import click
 import time
 
 from influxdb import InfluxDBClient
+from itertools import chain
 from .helper import Helper
 
 class Influx(object):
@@ -204,7 +205,11 @@ class Influx(object):
 
         time_format = lambda x: time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(float(x) / 1000))
 
+        gen = []
+
         for time_range in annotation_dict:
             kwargs['time_lower'] = time_format(time_range[0])
             kwargs['time_upper'] = time_format(time_range[1])
-            yield self.probe(name, **kwargs)
+            gen.append(self.probe(name, **kwargs))
+
+        return chain(*gen)

@@ -100,7 +100,13 @@ class Helper(object):
     @staticmethod
     def discreet_wave_energy(l):
         """
+        Finds the Discrete Wave energry (extrapolated points).
 
+        Args:
+            l (list): Points
+
+        Returns:
+            (float): Energy Representation
         """
 
         def area_under(a, b):
@@ -115,6 +121,7 @@ class Helper(object):
             Returns:
                 (float) Area
             """
+
             def line(x):
                 """
                 Using two - point equation for the straight line
@@ -274,3 +281,8 @@ class Stupidity(object):
         ca = np.ones((len(P), len(Q)))
         ca = np.multiply(ca, -1)
         return _c(ca, len(P) - 1, len(Q) - 1, P, Q)
+
+    @staticmethod
+    def normalise_dist(l):
+        n_f = lambda x: 1 - (x / sum(l))
+        return list(map(n_f, l))

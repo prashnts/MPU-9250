@@ -171,3 +171,16 @@ def scratch(annotation_db):
         # ax.plot(z)
 
     plt.show()
+
+@main.command()
+@click.argument('annotation_db', type=str)
+def scratch_two(annotation_db):
+
+    idb = Influx()
+
+    click.echo("😐  Loading the data from influxdb.")
+
+    trans  = idb.probe_annotation('accelerometer', annotations.get('transition_2509'))
+    static = idb.probe_annotation('accelerometer', annotations.get('static_2609'))
+    walk   = idb.probe_annotation('accelerometer', annotations.get('walk_2509'))
+    run    = idb.probe_annotation('accelerometer', annotations.get('run_2609'))
