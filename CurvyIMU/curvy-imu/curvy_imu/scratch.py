@@ -16,6 +16,7 @@ from sklearn.svm import SVC
 from sklearn.decomposition import PCA
 from numpy import linalg as LA
 from scipy.optimize import curve_fit
+from itertools import chain
 
 from .udp import UDP
 from .influx import Influx
@@ -176,11 +177,16 @@ def scratch(annotation_db):
 @click.argument('annotation_db', type=str)
 def scratch_two(annotation_db):
 
+    annotations = Annotation(annotation_db)
     idb = Influx()
 
     click.echo("😐  Loading the data from influxdb.")
 
-    trans  = idb.probe_annotation('accelerometer', annotations.get('transition_2509'))
+    trans  = idb.probe_annotation('accelerometer', annotations.get('transition_2509'), True)
     static = idb.probe_annotation('accelerometer', annotations.get('static_2609'))
     walk   = idb.probe_annotation('accelerometer', annotations.get('walk_2509'))
     run    = idb.probe_annotation('accelerometer', annotations.get('run_2609'))
+
+
+    for _ in trans:
+        print(_)
