@@ -207,7 +207,7 @@ class Stupidity(object):
         c1, c2, c3 = val[:l], val[l:len(val) - l], val[len(val) - l:]
         m1, m2, m3 = np.mean(c1), np.mean(c2), np.mean(c3)
 
-        print(m1, m2, m3)
+        #print(m1, m2, m3)
 
         a = (m3 - m1) / 2
         b = 0
@@ -289,3 +289,37 @@ class Stupidity(object):
     def normalise_dist(l):
         n_f = lambda x: 1 - (x / sum(l))
         return list(map(n_f, l))
+
+    def polygon(l):
+        """
+        Returns generalised polygonal function from the given set of points.
+        """
+
+        def line(p1, p2):
+            """
+            Returns a line function passing through p1 and p2.
+            y - y1 = (y2 - y1) / (x2 - x1) * (x - x1)
+            or   y = (y2 - y1) / (x2 - x1) * (x - x1) + y1
+
+            Args:
+                p1, p2 (List): Point 1 and Point 2
+            Returns:
+                (callable): Line function
+            """
+            m = (p2[1] - p1[1]) / (p2[0] - p1[0])
+
+            return lambda x: m * (x - p1[0]) + p1[1]
+
+        point_pairs = zip(l[0:], l[1:])
+        fun = []
+
+        for pair in point_pairs:
+            fun.append([range(pair[0][0], pair[1][0]), line(*pair)])
+
+        def func(x):
+            for i in fun:
+                if x in i[0]:
+                    return i[1](x)
+            return 0
+
+        return func

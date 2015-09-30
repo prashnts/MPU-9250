@@ -281,13 +281,12 @@ class Routines(object):
             (list): Eigenvalues, feature.
         """
 
-        print(val_set)
-
         ftr = []
         wave_energy = []
         fig = plt.figure()
         ax = fig.add_subplot(111)
         ax.set_ylim([-4, 4])
+        var1 = []
 
         for col in val_set:
             discreet_fit = [Stupidity.sine_fit(col),
@@ -316,11 +315,18 @@ class Routines(object):
 
             #ax.plot([discreet_fit[1][0](_) for _ in range(w_col)])
             ax.plot(col)
-            keypoints = local_minima + local_maxima
-            print(sorted(keypoints))
+            keypoints = sorted(local_minima + local_maxima)
+            key_map = [col[_] for _ in keypoints]
+            var1.append(np.var(key_map))
 
+            key_map_t = [[_, col[_]] for _ in keypoints]
+            polyg = Stupidity.polygon(key_map_t)
+            ax.plot([polyg(_) for _ in range(w_col)])
+
+        print( [sum(var1) / 3,
+                sum(wave_energy) / 3
+             ])
         plt.show()
-
 
         wave_en = sum(wave_energy) / 3
         ftr_nml = [max(_) for _ in zip(*ftr)]

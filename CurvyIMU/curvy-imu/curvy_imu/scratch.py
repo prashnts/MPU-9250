@@ -272,3 +272,7 @@ def scratch_f():
     Routines.sep_29_02_feature(s_walk)
     Routines.sep_29_02_feature(s_run)
     Routines.sep_29_02_feature(s_trans)
+
+"""
+ENERGY HAS BEEN ESTABLISHED TO BE A GOOD FEATURE.
+"""
