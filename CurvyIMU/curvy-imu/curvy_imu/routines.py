@@ -322,13 +322,14 @@ class Routines(object):
             var1.append(np.var(key_map))
 
             key_map_t = [[_, col[_]] for _ in keypoints]
-            polyg, m = Stupidity.polygon(key_map_t)
+            polyg, m, lengt = Stupidity.polygon(key_map_t)
             slope.append(m)
+            print(sum(lengt))
             gr = Gradient()
             grm = list(gr.remap(m))
             grc = set(grm)
             # print([[_, grm.count(_)] for _ in grc])
-            print(np.var(grm))
+            #print(np.var(grm))
             ax.plot([polyg(_) for _ in range(w_col)])
 
         sl_v = [np.var(_) for _ in slope]

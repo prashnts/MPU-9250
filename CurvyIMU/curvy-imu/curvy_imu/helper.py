@@ -228,6 +228,25 @@ class Stupidity(object):
         return (lambda x: c, [m, c])
 
     @staticmethod
+    def euc_dist(pt1, pt2):
+        """
+        Calculates the Euclidean Distance between n-dimensional vectors pt1 and pt2.
+        Args:
+            pt1, pt2 (list): n-Dimensional Vectors
+        Returns:
+            (float): Euclidean Distance
+        Raises:
+            ValueError: pt1 and pt2 are not comparable.
+        """
+
+        if len(pt1) is not len(pt2):
+            raise ValueError
+
+        coupling = [(ui - vi)**2 for (ui, vi) in zip(pt1, pt2)]
+
+        return math.sqrt(sum(coupling))
+
+    @staticmethod
     def frechet_dist(P, Q, remap = True):
         """
         Computes the discrete frechet distance between two polygonal lines
@@ -241,24 +260,6 @@ class Stupidity(object):
             (float): Frechet Distance
         """
 
-        def euc_dist(pt1, pt2):
-            """
-            Calculates the Euclidean Distance between n-dimensional vectors pt1 and pt2.
-            Args:
-                pt1, pt2 (list): n-Dimensional Vectors
-            Returns:
-                (float): Euclidean Distance
-            Raises:
-                ValueError: pt1 and pt2 are not comparable.
-            """
-
-            if len(pt1) is not len(pt2):
-                raise ValueError
-
-            coupling = [(ui - vi)**2 for (ui, vi) in zip(pt1, pt2)]
-
-            return math.sqrt(sum(coupling))
-
         def _c(ca, i, j, P, Q):
             """
             Calculates the infinite norm of matrix `ca` recursively. The norm is the coupling here.
@@ -267,13 +268,13 @@ class Stupidity(object):
             if ca[i, j] > -1:
                 return ca[i, j]
             elif i == 0 and j == 0:
-                ca[i, j] = euc_dist(P[0], Q[0])
+                ca[i, j] = Stupidity.euc_dist(P[0], Q[0])
             elif i > 0 and j == 0:
-                ca[i, j] = max(_c(ca, i - 1, 0, P, Q), euc_dist(P[i], Q[0]))
+                ca[i, j] = max(_c(ca, i - 1, 0, P, Q), Stupidity.euc_dist(P[i], Q[0]))
             elif i == 0 and j > 0:
-                ca[i, j] = max(_c(ca, 0, j - 1, P, Q), euc_dist(P[0], Q[j]))
+                ca[i, j] = max(_c(ca, 0, j - 1, P, Q), Stupidity.euc_dist(P[0], Q[j]))
             elif i > 0 and j > 0:
-                ca[i, j] = max(min(_c(ca, i - 1, j, P, Q), _c(ca, i - 1, j - 1, P, Q), _c(ca, i, j - 1, P, Q)), euc_dist(P[i], Q[j]))
+                ca[i, j] = max(min(_c(ca, i - 1, j, P, Q), _c(ca, i - 1, j - 1, P, Q), _c(ca, i, j - 1, P, Q)), Stupidity.euc_dist(P[i], Q[j]))
             else:
                 ca[i, j] = float("inf")
             return ca[i, j]
@@ -297,7 +298,8 @@ class Stupidity(object):
         Returns generalised polygonal function from the given set of points.
         """
 
-        a = []
+        slope = []
+        lengt = []
 
         def line(p1, p2):
             """
@@ -311,7 +313,8 @@ class Stupidity(object):
                 (callable): Line function
             """
             m = (p2[1] - p1[1]) / (p2[0] - p1[0])
-            a.append(m)
+            slope.append(m)
+            lengt.append(Stupidity.euc_dist(p1, p2))
 
             return lambda x: m * (x - p1[0]) + p1[1]
 
@@ -327,14 +330,28 @@ class Stupidity(object):
                     return i[1](x)
             return 0
 
-        return func, a
+        return func, slope, lengt
 
     @staticmethod
     def extrema_keypoints(l):
         """
-
+        Finds the Extremities of the discrete wave sequence.
+        Extremities are defined as the first and last points, the local maxima and the local minima.
         """
-        pass
+        l_maxima  = list(argrelmax(np.array(l), order = 5)[0])
+        l_minima  = list(argrelmin(np.array(l), order = 5)[0])
+        collation = sorted(l_minima + l_maxima)
+        keypoints = [[_, l[_]] for _ in keypoints]
+
+        #: Handle Edge cases
+        f = [0, l[0]]
+        l = [len(l), l(len(l) - 1)]
+
+        #: Append Extremities
+        keypoints.insert(0, f)
+        keypoints.append(l)
+
+        return keypoints
 
 class Gradient(object):
 
