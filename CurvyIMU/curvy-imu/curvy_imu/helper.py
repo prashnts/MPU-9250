@@ -329,6 +329,13 @@ class Stupidity(object):
 
         return func, a
 
+    @staticmethod
+    def extrema_keypoints(l):
+        """
+
+        """
+        pass
+
 class Gradient(object):
 
     def __init__(self, r = 5):

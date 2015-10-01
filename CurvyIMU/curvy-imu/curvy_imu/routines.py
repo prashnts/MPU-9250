@@ -325,7 +325,10 @@ class Routines(object):
             polyg, m = Stupidity.polygon(key_map_t)
             slope.append(m)
             gr = Gradient()
-            print(list(gr.remap(m)))
+            grm = list(gr.remap(m))
+            grc = set(grm)
+            # print([[_, grm.count(_)] for _ in grc])
+            print(np.var(grm))
             ax.plot([polyg(_) for _ in range(w_col)])
 
         sl_v = [np.var(_) for _ in slope]
