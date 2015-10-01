@@ -13,6 +13,7 @@ from scipy.signal import argrelmax, argrelmin
 
 from .helper import Helper
 from .helper import Stupidity
+from .helper import Gradient
 
 class Routines(object):
     """
@@ -287,6 +288,7 @@ class Routines(object):
         ax = fig.add_subplot(111)
         ax.set_ylim([-4, 4])
         var1 = []
+        slope = []
 
         for col in val_set:
             discreet_fit = [Stupidity.sine_fit(col),
@@ -320,11 +322,18 @@ class Routines(object):
             var1.append(np.var(key_map))
 
             key_map_t = [[_, col[_]] for _ in keypoints]
-            polyg = Stupidity.polygon(key_map_t)
+            polyg, m = Stupidity.polygon(key_map_t)
+            slope.append(m)
+            gr = Gradient()
+            print(list(gr.remap(m)))
             ax.plot([polyg(_) for _ in range(w_col)])
 
+        sl_v = [np.var(_) for _ in slope]
+
         print( [sum(var1) / 3,
-                sum(wave_energy) / 3
+                sum(wave_energy) / 3,
+                sum(sl_v) / 3,
+                [[max(_), min(_)] for _ in slope]
              ])
         plt.show()
 

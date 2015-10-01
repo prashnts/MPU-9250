@@ -7,6 +7,7 @@
 import click
 import math
 import numpy as np
+import inspect
 
 from scipy.optimize import curve_fit
 from itertools import cycle
@@ -290,10 +291,13 @@ class Stupidity(object):
         n_f = lambda x: 1 - (x / sum(l))
         return list(map(n_f, l))
 
+    @staticmethod
     def polygon(l):
         """
         Returns generalised polygonal function from the given set of points.
         """
+
+        a = []
 
         def line(p1, p2):
             """
@@ -307,6 +311,7 @@ class Stupidity(object):
                 (callable): Line function
             """
             m = (p2[1] - p1[1]) / (p2[0] - p1[0])
+            a.append(m)
 
             return lambda x: m * (x - p1[0]) + p1[1]
 
@@ -322,4 +327,52 @@ class Stupidity(object):
                     return i[1](x)
             return 0
 
-        return func
+        return func, a
+
+class Gradient(object):
+
+    def __init__(self, r = 5):
+        self.bins = Gradient.gradient_bin(r)
+
+    @staticmethod
+    def gradient_bin(r):
+        """
+        Creates the Gradient Bin Estimator. Divides -90 to 90 degrees into equal intervals, and estimates the slope intervals.
+        Args:
+            r (int): Step value in degrees.
+        Returns:
+            (list): Format [Bin_Number, Callable]
+
+        Example: If one wishes to create gradient bins spaced at 10 degrees, call `gradient_bin(10)`.
+        """
+
+        #: If r = 5 degrees, range(-17, 18) => [-17, 17].
+        intrvl_v = [np.tan(np.radians(r * _)) for _ in range(int(-90 / r) + 1, int(90 / r))]
+        #: Handle corner cases.
+        intrvl_v.insert(0, float("-inf"))
+        intrvl_v.append(float("inf"))
+        intrvl_pair = list(zip(intrvl_v[0:], intrvl_v[1:]))
+
+        #: Rule Estimators
+        #: `_=_` Captures _ in lambda closure, hence allowing reuse.
+        rules = [lambda x, _=_: _[0] <= x < _[1] for _ in intrvl_pair]
+
+        #: Remap Estimator
+        bins = zip(range(int(-90 / r), int(90 / r) + 1), rules)
+
+        return list(bins)
+
+    def bin(self, m):
+        """
+        """
+
+        for rule in self.bins:
+            if rule[1](m):
+                return rule[0]
+
+        raise ValueError
+
+    def remap(self, m):
+        """
+        """
+        return map(self.bin, m)
