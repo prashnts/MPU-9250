@@ -321,7 +321,9 @@ class Routines(object):
             key_map = [col[_] for _ in keypoints]
             var1.append(np.var(key_map))
 
-            key_map_t = [[_, col[_]] for _ in keypoints]
+            key_map_t = Stupidity.extrema_keypoints(col)
+            colb = [[_, col[_]] for _ in range(len(col))]
+            # key_map_t = [[_, col[_]] for _ in keypoints]
             polyg, m, lengt = Stupidity.polygon(key_map_t)
             bezier = Stupidity.cubic_bezier(key_map_t)
             slope.append(m)
@@ -331,7 +333,7 @@ class Routines(object):
             grc = set(grm)
             # print([[_, grm.count(_)] for _ in grc])
             #print(np.var(grm))
-            ax.plot([polyg(_) for _ in range(w_col)])
+            #ax.plot([polyg(_) for _ in range(w_col)])
             ax.plot([bezier(_) for _ in range(w_col)])
 
         sl_v = [np.var(_) for _ in slope]

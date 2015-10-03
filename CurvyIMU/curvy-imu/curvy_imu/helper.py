@@ -10,6 +10,7 @@ import numpy as np
 import inspect
 
 from scipy.optimize import curve_fit
+from scipy.signal import argrelmax, argrelmin
 from itertools import cycle
 
 class Helper(object):
@@ -162,28 +163,23 @@ class Helper(object):
         return abs(int_sine(n) - int_sine(m))
 
     @staticmethod
-    def slidingWindow(sequence,winSize,step=1):
+    def sliding_window(sequence, win_size, step = 1):
         """Returns a generator that will iterate through
         the defined chunks of input sequence.  Input sequence
         must be iterable."""
 
-        # Verify the inputs
-        try: it = iter(sequence)
-        except TypeError:
-            raise Exception("**ERROR** sequence must be iterable.")
-        if not ((type(winSize) == type(0)) and (type(step) == type(0))):
-            raise Exception("**ERROR** type(winSize) and type(step) must be int.")
-        if step > winSize:
-            raise Exception("**ERROR** step must not be larger than winSize.")
-        if winSize > len(sequence):
-            raise Exception("**ERROR** winSize must not be larger than sequence length.")
+        if step > win_size:
+            raise ValueError("step should be lesser than win_size")
+        if win_size > len(sequence):
+            raise ValueError("win_size should be lesser than length of sequence")
 
         # Pre-compute number of chunks to emit
-        numOfChunks = ((len(sequence)-winSize)/step)+1
+        num_of_chunks = int((len(sequence) - win_size) / step) + 1
+        print(num_of_chunks)
 
         # Do the work
-        for i in range(0,numOfChunks*step,step):
-            yield sequence[i:i+winSize]
+        for i in range(0, num_of_chunks * step, step):
+            yield sequence[i:i + win_size]
 
 class Stupidity(object):
     """
@@ -373,12 +369,26 @@ class Stupidity(object):
 
             return lambda x: (m * x**3 / 6) + (c * x**2 / 2) + (d * x) + k
 
+        def bezier(points):
+            A = []
+            B = []
+            for i in points:
+                x, y = i
+                A.append([x**3, x**2, x, 1])
+                B.append(y)
+            a, b, c, d = list(np.linalg.solve(np.array(A), np.array(B)))
+            return lambda x: a * x**3 + b * x**2 + c * x + d
 
-        point_pairs = zip(l[0:], l[1:])
+        # point_pairs = zip(l[0:], l[1:])
         fun = []
 
-        for pair in point_pairs:
-            fun.append([range(pair[0][0], pair[1][0]), cubic_func(*pair)])
+        control_points = Helper.sliding_window(l, 4, 1)
+
+        for w in control_points:
+            fun.append([range(w[0][0], w[1][0]), bezier(w)])
+
+        # for pair in point_pairs:
+        #     fun.append([range(pair[0][0], pair[1][0]), cubic_func(*pair)])
 
         def func(x):
             for i in fun:
@@ -399,11 +409,11 @@ class Stupidity(object):
         l_maxima  = list(argrelmax(np.array(l), order = 5)[0])
         l_minima  = list(argrelmin(np.array(l), order = 5)[0])
         collation = sorted(l_minima + l_maxima)
-        keypoints = [[_, l[_]] for _ in keypoints]
+        keypoints = [[_, l[_]] for _ in collation]
 
         #: Handle Edge cases
         f = [0, l[0]]
-        l = [len(l), l(len(l) - 1)]
+        l = [len(l), l[len(l) - 1]]
 
         #: Append Extremities
         keypoints.insert(0, f)
