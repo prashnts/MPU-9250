@@ -323,6 +323,7 @@ class Routines(object):
 
             key_map_t = [[_, col[_]] for _ in keypoints]
             polyg, m, lengt = Stupidity.polygon(key_map_t)
+            bezier = Stupidity.cubic_bezier(key_map_t)
             slope.append(m)
             print(sum(lengt))
             gr = Gradient()
@@ -331,6 +332,7 @@ class Routines(object):
             # print([[_, grm.count(_)] for _ in grc])
             #print(np.var(grm))
             ax.plot([polyg(_) for _ in range(w_col)])
+            ax.plot([bezier(_) for _ in range(w_col)])
 
         sl_v = [np.var(_) for _ in slope]
 

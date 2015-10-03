@@ -269,9 +269,9 @@ def scratch_three(annotation_db, pickled_svm_object):
 #@click.argument('pickled_svm_object', type = click.File('rb'))
 def scratch_f():
     Routines.sep_29_02_feature(s_static)
-    # Routines.sep_29_02_feature(s_walk)
-    # Routines.sep_29_02_feature(s_run)
-    # Routines.sep_29_02_feature(s_trans)
+    Routines.sep_29_02_feature(s_walk)
+    Routines.sep_29_02_feature(s_run)
+    Routines.sep_29_02_feature(s_trans)
 
 """
 ENERGY HAS BEEN ESTABLISHED TO BE A GOOD FEATURE.

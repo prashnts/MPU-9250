@@ -161,6 +161,30 @@ class Helper(object):
 
         return abs(int_sine(n) - int_sine(m))
 
+    @staticmethod
+    def slidingWindow(sequence,winSize,step=1):
+        """Returns a generator that will iterate through
+        the defined chunks of input sequence.  Input sequence
+        must be iterable."""
+
+        # Verify the inputs
+        try: it = iter(sequence)
+        except TypeError:
+            raise Exception("**ERROR** sequence must be iterable.")
+        if not ((type(winSize) == type(0)) and (type(step) == type(0))):
+            raise Exception("**ERROR** type(winSize) and type(step) must be int.")
+        if step > winSize:
+            raise Exception("**ERROR** step must not be larger than winSize.")
+        if winSize > len(sequence):
+            raise Exception("**ERROR** winSize must not be larger than sequence length.")
+
+        # Pre-compute number of chunks to emit
+        numOfChunks = ((len(sequence)-winSize)/step)+1
+
+        # Do the work
+        for i in range(0,numOfChunks*step,step):
+            yield sequence[i:i+winSize]
+
 class Stupidity(object):
     """
     Stupid Curve Approximation Methods, and Evaluations.
@@ -313,10 +337,11 @@ class Stupidity(object):
                 (callable): Line function
             """
             m = (p2[1] - p1[1]) / (p2[0] - p1[0])
+            c = p1[1] - m * p1[0]
             slope.append(m)
             lengt.append(Stupidity.euc_dist(p1, p2))
 
-            return lambda x: m * (x - p1[0]) + p1[1]
+            return lambda x: m * x + c
 
         point_pairs = zip(l[0:], l[1:])
         fun = []
@@ -333,10 +358,43 @@ class Stupidity(object):
         return func, slope, lengt
 
     @staticmethod
+    def cubic_bezier(l):
+        """
+        """
+
+        def cubic_func(p1, p2):
+            m = (p2[1] - p1[1]) / (p2[0] - p1[0])
+            c = p1[1] - m * p1[0]
+            a = p1[0]
+            b = p2[0]
+
+            d = m - (m * (b**2 + a * b + a**2) / 6) - (c * (b + a) / 2)
+            k = (m * a * (b**2 + a * b) / 6) + (a * b * c / 2) + c
+
+            return lambda x: (m * x**3 / 6) + (c * x**2 / 2) + (d * x) + k
+
+
+        point_pairs = zip(l[0:], l[1:])
+        fun = []
+
+        for pair in point_pairs:
+            fun.append([range(pair[0][0], pair[1][0]), cubic_func(*pair)])
+
+        def func(x):
+            for i in fun:
+                if x in i[0]:
+                    return i[1](x)
+            return 0
+
+        return func
+
+    @staticmethod
     def extrema_keypoints(l):
         """
         Finds the Extremities of the discrete wave sequence.
         Extremities are defined as the first and last points, the local maxima and the local minima.
+        Args:
+            l
         """
         l_maxima  = list(argrelmax(np.array(l), order = 5)[0])
         l_minima  = list(argrelmin(np.array(l), order = 5)[0])
