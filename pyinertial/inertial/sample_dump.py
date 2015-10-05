@@ -39,7 +39,7 @@ class Samples(object):
     def __init__(self):
         self._load_label()
 
-    def probe(self, tag, window_len = 50, step = 25):
+    def probe(self, tag, window_len = 64, step = 25):
         """
 
         """

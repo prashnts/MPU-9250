@@ -164,9 +164,11 @@ class Helper(object):
 
     @staticmethod
     def sliding_window(sequence, win_size, step = 1):
-        """Returns a generator that will iterate through
-        the defined chunks of input sequence.  Input sequence
-        must be iterable."""
+        """
+        Returns a generator that will iterate through
+        the defined chunks of input sequence.
+        Input sequence must be iterable.
+        """
 
         if step > win_size:
             raise ValueError("step should be lesser than win_size")
