@@ -220,11 +220,12 @@ class Routines(object):
         WINDOW_LEN = 5
         VAR_ORDERED = ["gradient", "gradient_binned", "keypoint", "moving_mean_v", "ax_var", "sm_keypoint", "sm_gradient", "sm_gradient_binned"]
         wave_energy = []
+        length_s = 0
         gradient_bin = Gradient()
         variance = {_: [] for _ in VAR_ORDERED}
 
         for ax_dat in axes_data:
-            plt.ylim([-2, 2])
+            #plt.ylim([-2, 2])
             wave_energy.append(Helper.discreet_wave_energy(ax_dat))
             keypoints = Stupidity.extrema_keypoints(ax_dat)
 
@@ -239,7 +240,7 @@ class Routines(object):
             variance["ax_var"].append([np.var(ax_dat), len(ax_dat)])
 
             b = pd.Series(ax_dat)
-            b.plot(style='k--')
+            #b.plot(style='k--')
 
             rm = pd.rolling_mean(b, WINDOW_LEN)
             rolling_list = list(rm)[WINDOW_LEN - 1:]
@@ -255,6 +256,8 @@ class Routines(object):
             variance["sm_gradient"].append([np.var(sm_slopes), len(sm_slopes)])
             variance["sm_gradient_binned"].append([np.var(sm_slope_binned), len(sm_slope_binned)])
 
+            length_s += len(ax_dat)
+
         v_rep = [Helper.pooled_variance(variance[_]) for _ in VAR_ORDERED]
 
-        return [sum(wave_energy)] + v_rep
+        return [sum(wave_energy) / length_s] + v_rep

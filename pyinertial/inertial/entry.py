@@ -20,6 +20,7 @@ from numpy import linalg as LA
 from scipy.optimize import curve_fit
 from itertools import chain
 from pandas.tools.plotting import lag_plot, autocorrelation_plot
+from pandas.tools.plotting import parallel_coordinates, andrews_curves
 
 from .udp import UDP
 from .influx import Influx
@@ -40,21 +41,60 @@ def main(ctx):
     pass
 
 @main.command()
-#@click.argument('pickled_svm_object', type = click.File('rb'))
 def scratch_f():
     s = Samples()
-    # for i in s.LABEL_DICT:
-    #     w = s.probe(i)
-    #     a = itertools.chain(*w)
-    #     plt.figure()
-    #     x, y, z = list(zip(*a))
-    #     d = pd.Series(x)
-    #     print(i)
-    #     autocorrelation_plot(d)
-    #     plt.show()
-    #while True:
-    # Routines.feature_vector(zip(*next(w)))
+    plt.figure()
+    ftr = []
+
     for i in s.LABEL_DICT:
         w = s.probe(i)
-        print(i)
-        Routines.feature_vector(zip(*next(w)))
+        fv_pr = []
+        c = 0
+        for row in w:
+            c += 1
+            if c == 1000:
+                break
+            ftr.append(Routines.feature_vector(zip(*row)) + [i])
+
+    hdr = ["w_e", "gradient", "gradient_binned", "keypoint", "moving_mean_v", "ax_var", "sm_keypoint", "sm_gradient", "sm_gradient_binned", "Name"]
+
+    df = pd.DataFrame(ftr, columns = hdr)
+    parallel_coordinates(df, "Name")
+    plt.show()
+    andrews_curves(df, "Name")
+    plt.show()
+
+@main.command()
+@click.option('--kernel', '-k', type=str, help='SVC Kernel')
+@click.option('--degree', '-d', type=int, help='SVC Degree (Only for Polynomial)')
+@click.argument('pickle_svm_object', type=click.File('wb'))
+def train(pickle_svm_object, kernel = 'poly', degree = 2):
+
+    click.echo("😐  Creating features.")
+
+    s = Samples()
+    plt.figure()
+    X = []
+    Y = []
+
+    for i in s.LABEL_DICT:
+        w = s.probe(i)
+        fv_pr = []
+        c = 0
+        for row in w:
+            c += 1
+            if c == 1000:
+                break
+            X.append(Routines.feature_vector(zip(*row)))
+            Y.append(int(s.LABEL_DICT[i]))
+
+    click.echo("😐  Done Creating features.")
+    click.echo("😏  Training SVM.")
+
+    support_vector_classifier = SVC(kernel = kernel, degree = degree)
+    support_vector_classifier.fit(X, Y)
+
+    click.echo("😄  Dumping SVM Object.")
+
+    pickle.dump(support_vector_classifier, pickle_svm_object)
+
