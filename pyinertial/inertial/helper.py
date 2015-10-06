@@ -151,6 +151,7 @@ class Helper(object):
 
         return sum([area_under(*_) for _ in pairs])
 
+    @staticmethod
     def sine_wave_energy(m, n, a, b, c, d):
         """
         """
@@ -423,6 +424,13 @@ class Stupidity(object):
 
         return keypoints
 
+    @staticmethod
+    def normal_destribution(l):
+        """
+        Figures out if a given list of raw values is distributed normally.
+        """
+        pass
+
 class Gradient(object):
 
     def __init__(self, r = 5):
@@ -469,4 +477,4 @@ class Gradient(object):
     def remap(self, m):
         """
         """
-        return map(self.bin, m)
+        return list(map(self.bin, m))

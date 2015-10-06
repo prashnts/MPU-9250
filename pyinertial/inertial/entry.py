@@ -41,5 +41,5 @@ def main(ctx):
 def scratch_f():
     s = Samples()
     w = s.probe("WALKING_DOWNSTAIRS")
-    while True:
-        Routines.sep_29_02_feature(zip(*next(w)))
+    #while True:
+    Routines.feature_vector(zip(*next(w)))

@@ -41,7 +41,6 @@ class Samples(object):
 
     def probe(self, tag, window_len = 64, step = 25):
         """
-
         """
 
         lz = lambda x: x.zfill(2)
