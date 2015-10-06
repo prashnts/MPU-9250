@@ -184,6 +184,19 @@ class Helper(object):
         for i in range(0, num_of_chunks * step, step):
             yield sequence[i:i + win_size]
 
+    @staticmethod
+    def pooled_variance(sequence):
+        """
+        Calculates the Pooled Variance of the given population.
+
+        Args:
+            sequence ([touples]): List of touples: [pop_variance, pop_size]
+        Returns:
+            (float): Pooled Variance
+        """
+
+        return sum([(l - 1) * v for v, l in sequence]) / sum([(l - 1) for _, l in sequence])
+
 class Stupidity(object):
     """
     Stupid Curve Approximation Methods, and Evaluations.
