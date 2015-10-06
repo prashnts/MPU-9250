@@ -333,7 +333,7 @@ class Routines(object):
             grc = set(grm)
             # print([[_, grm.count(_)] for _ in grc])
             #print(np.var(grm))
-            #ax.plot([polyg(_) for _ in range(w_col)])
+            ax.plot([polyg(_) for _ in range(w_col)])
             #ax.plot([bezier(_) for _ in range(w_col)])
 
         sl_v = [np.var(_) for _ in slope]
@@ -349,3 +349,18 @@ class Routines(object):
         ftr_nml = [max(_) for _ in zip(*ftr)]
 
         return ftr_nml + [wave_en]
+
+    def feature_vector(val_set):
+        """
+        Creates the Feature Vector.
+        Feature Vectors:
+            - Wave Energy: Sum over all Axes
+            -
+
+        Args:
+            val_set (list): List containing chunks of data per axes.
+
+        Returns:
+            (list): Feature Vector
+        """
+        pass

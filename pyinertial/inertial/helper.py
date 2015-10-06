@@ -408,8 +408,8 @@ class Stupidity(object):
         Args:
             l
         """
-        l_maxima  = list(argrelmax(np.array(l), order = 5)[0])
-        l_minima  = list(argrelmin(np.array(l), order = 5)[0])
+        l_maxima  = list(argrelmax(np.array(l), order = 3)[0])
+        l_minima  = list(argrelmin(np.array(l), order = 3)[0])
         collation = sorted(l_minima + l_maxima)
         keypoints = [[_, l[_]] for _ in collation]
 
