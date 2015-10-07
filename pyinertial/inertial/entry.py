@@ -83,18 +83,51 @@ def train(pickle_svm_object, kernel = 'poly', degree = 2):
         c = 0
         for row in w:
             c += 1
-            if c == 1000:
-                break
+            print(c)
+            # if c == 100:
+            #     break
             X.append(Routines.feature_vector(zip(*row)))
             Y.append(int(s.LABEL_DICT[i]))
 
     click.echo("😐  Done Creating features.")
     click.echo("😏  Training SVM.")
 
-    support_vector_classifier = SVC(kernel = kernel, degree = degree)
+    support_vector_classifier = SVC(kernel = 'rbf', C=1e-2, gamma=1e1)
     support_vector_classifier.fit(X, Y)
+
+    for i in s.LABEL_DICT:
+        print(i)
+        w = s.probe(i)
+        c = 0
+        for row in w:
+            c += 1
+
+            if c == 10:
+                break
+            cls = support_vector_classifier.predict(Routines.feature_vector(zip(*row)))
+            print("Predicted: {0}; Actual: {1}".format(cls, i))
 
     click.echo("😄  Dumping SVM Object.")
 
     pickle.dump(support_vector_classifier, pickle_svm_object)
 
+
+@main.command()
+@click.argument('pickle_svm_object', type=click.File('rb'))
+def test(pickle_svm_object):
+    click.echo("😐  Creating features.")
+    print(pickle.load(pickle_svm_object))
+
+    s = Samples()
+
+    for i in s.LABEL_DICT:
+        w = s.probe(i)
+        c = 0
+        for row in w:
+            c += 1
+            if c < 990:
+                continue
+            if c == 1000:
+                break
+            cls = sv.predict(Routines.feature_vector(zip(*row)))
+            print("Predicted: {0}; Actual: {1}".format(cls, i))

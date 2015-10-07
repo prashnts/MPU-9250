@@ -444,6 +444,13 @@ class Stupidity(object):
         """
         pass
 
+    @staticmethod
+    def threebin_mode(l):
+        """
+
+        """
+        pass
+
 class Gradient(object):
 
     def __init__(self, r = 5):
