@@ -35,6 +35,14 @@ class Samples(object):
         "STAND_TO_LIE":         "11",
         "LIE_TO_STAND":         "12",
     }
+    LABEL_DICT_USED = {
+        "WALKING":              "1",
+        "WALKING_UPSTAIRS":     "1",
+        "WALKING_DOWNSTAIRS":   "1",
+        "SITTING":              "4",
+        "STANDING":             "5",
+        "LAYING":               "6",
+    }
 
     def __init__(self):
         self._load_label()

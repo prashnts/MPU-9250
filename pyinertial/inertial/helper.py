@@ -451,6 +451,12 @@ class Stupidity(object):
         """
         pass
 
+    @staticmethod
+    def dominant_axis(en):
+        """
+        """
+        return en.index(max(en))
+
 class Gradient(object):
 
     def __init__(self, r = 5):

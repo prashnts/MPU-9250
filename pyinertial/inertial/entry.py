@@ -46,22 +46,26 @@ def scratch_f():
     plt.figure()
     ftr = []
 
-    for i in s.LABEL_DICT:
+    for i in s.LABEL_DICT_USED:
         w = s.probe(i)
         fv_pr = []
         c = 0
         for row in w:
             c += 1
-            if c == 1000:
+            if c == 50:
                 break
-            ftr.append(Routines.feature_vector(zip(*row)) + [i])
+            f = Routines.feature_vector(zip(*row)) + [i]
+            print(f)
+            ftr.append(f)
 
-    hdr = ["w_e", "gradient", "gradient_binned", "keypoint", "moving_mean_v", "ax_var", "sm_keypoint", "sm_gradient", "sm_gradient_binned", "Name"]
+    hdr = ["w_e", "gradient", "gradient_binned", "keypoint", "moving_mean_v", "ax_var", "sm_keypoint", "sm_gradient", "sm_gradient_binned", "doma", "Name"]
+
+    #hsdr = ["w_e", "gradient_binned", "doma"]
+
+    hsdr = ["w_e", "ax_var", "keypoint", "gradient", "sm_gradient_binned"]
 
     df = pd.DataFrame(ftr, columns = hdr)
-    parallel_coordinates(df, "Name")
-    plt.show()
-    andrews_curves(df, "Name")
+    parallel_coordinates(df, cols = hsdr, class_column = "Name")
     plt.show()
 
 @main.command()
@@ -77,7 +81,7 @@ def train(pickle_svm_object, kernel = 'poly', degree = 2):
     X = []
     Y = []
 
-    for i in s.LABEL_DICT:
+    for i in s.LABEL_DICT_USED:
         w = s.probe(i)
         fv_pr = []
         c = 0
@@ -87,7 +91,7 @@ def train(pickle_svm_object, kernel = 'poly', degree = 2):
             # if c == 100:
             #     break
             X.append(Routines.feature_vector(zip(*row)))
-            Y.append(int(s.LABEL_DICT[i]))
+            Y.append(int(s.LABEL_DICT_USED[i]))
 
     click.echo("😐  Done Creating features.")
     click.echo("😏  Training SVM.")
@@ -95,7 +99,7 @@ def train(pickle_svm_object, kernel = 'poly', degree = 2):
     support_vector_classifier = SVC(kernel = 'rbf', C=1e-2, gamma=1e1)
     support_vector_classifier.fit(X, Y)
 
-    for i in s.LABEL_DICT:
+    for i in s.LABEL_DICT_USED:
         print(i)
         w = s.probe(i)
         c = 0
@@ -116,18 +120,14 @@ def train(pickle_svm_object, kernel = 'poly', degree = 2):
 @click.argument('pickle_svm_object', type=click.File('rb'))
 def test(pickle_svm_object):
     click.echo("😐  Creating features.")
-    print(pickle.load(pickle_svm_object))
+    sv = pickle.load(pickle_svm_object)
 
     s = Samples()
 
-    for i in s.LABEL_DICT:
+    for i in s.LABEL_DICT_USED:
         w = s.probe(i)
         c = 0
         for row in w:
             c += 1
-            if c < 990:
-                continue
-            if c == 1000:
-                break
             cls = sv.predict(Routines.feature_vector(zip(*row)))
             print("Predicted: {0}; Actual: {1}".format(cls, i))

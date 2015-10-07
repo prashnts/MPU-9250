@@ -229,15 +229,15 @@ class Routines(object):
             wave_energy.append(Helper.discreet_wave_energy(ax_dat))
             keypoints = Stupidity.extrema_keypoints(ax_dat)
 
-            variance["keypoint"].append([np.var(list(zip(*keypoints))[1]), len(keypoints)])
+            variance["keypoint"].append(np.log([np.var(list(zip(*keypoints))[1]), len(keypoints)]))
 
             polygon, slopes, lengths = Stupidity.polygon(keypoints)
             slope_binned = gradient_bin.remap(slopes)
 
-            variance["gradient"].append([np.var(slopes), len(slopes)])
+            variance["gradient"].append(np.log([np.var(slopes), len(slopes)]))
             variance["gradient_binned"].append([np.var(slope_binned), len(slope_binned)])
 
-            variance["ax_var"].append([np.var(ax_dat), len(ax_dat)])
+            variance["ax_var"].append(np.log([np.var(ax_dat), len(ax_dat)]))
 
             b = pd.Series(ax_dat)
             #b.plot(style='k--')
@@ -260,4 +260,4 @@ class Routines(object):
 
         v_rep = [Helper.pooled_variance(variance[_]) for _ in VAR_ORDERED]
 
-        return [sum(wave_energy) / length_s] + v_rep
+        return [sum(wave_energy) / 3] + v_rep + [Stupidity.dominant_axis(wave_energy)]
