@@ -235,7 +235,7 @@ class Routines(object):
             slope_binned = gradient_bin.remap(slopes)
 
             variance["gradient"].append(np.log([np.var(slopes), len(slopes)]))
-            variance["gradient_binned"].append([np.var(slope_binned), len(slope_binned)])
+            variance["gradient_binned"].append(np.log([np.var(slope_binned), len(slope_binned)]))
 
             variance["ax_var"].append(np.log([np.var(ax_dat), len(ax_dat)]))
 

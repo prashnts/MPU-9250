@@ -62,7 +62,7 @@ def scratch_f():
 
     #hsdr = ["w_e", "gradient_binned", "doma"]
 
-    hsdr = ["w_e", "ax_var", "keypoint", "gradient", "sm_gradient_binned"]
+    hsdr = ["w_e", "ax_var", "keypoint", "gradient_binned", "sm_gradient_binned"]
 
     df = pd.DataFrame(ftr, columns = hdr)
     parallel_coordinates(df, cols = hsdr, class_column = "Name")

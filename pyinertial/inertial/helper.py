@@ -459,7 +459,7 @@ class Stupidity(object):
 
 class Gradient(object):
 
-    def __init__(self, r = 5):
+    def __init__(self, r = 3):
         self.bins = Gradient.gradient_bin(r)
 
     @staticmethod
