@@ -217,54 +217,41 @@ class Routines(object):
             (list): Feature Vector
         """
 
-        WINDOW_LEN = 5
-        VAR_ORDERED = ["gradient", "gradient_binned", "keypoint", "moving_mean_v", "ax_var", "sm_keypoint", "sm_gradient", "sm_gradient_binned", "three_var"]
+        WINDOW_LEN = 32
+        VAR_ORDERED = ["gradient", "gradient_binned", "moving_mean"]
         wave_energy = []
         length_s = 0
         gradient_bin = Gradient()
         variance = {_: [] for _ in VAR_ORDERED}
 
         for ax_dat in axes_data:
+            #: Wave Energy
             wave_energy.append(Helper.discreet_wave_energy(ax_dat))
+
+            #: Keypoint Polygon
             keypoints = Stupidity.extrema_keypoints(ax_dat)
-
-            variance["keypoint"].append([ np.log(np.var(list(zip(*keypoints))[1])) , len(keypoints)])
-
             polygon, slopes, lengths = Stupidity.polygon(keypoints)
             slope_binned = gradient_bin.remap(slopes)
+            slope_binned_absolute = gradient_bin.remap(slopes, True)
 
+            #: Variance of Gradient
             variance["gradient"].append([ np.log(np.var(slopes)), len(slopes)])
-            variance["gradient_binned"].append([ np.log(np.var(slope_binned)), len(slope_binned)])
+            variance["gradient_binned"].append([ np.var(slope_binned), len(slope_binned)])
 
-            variance["ax_var"].append([ np.log(np.var(ax_dat)), len(ax_dat)])
+            pd_ax_dat = pd.Series(ax_dat)
 
-            b = pd.Series(ax_dat)
+            sm_ax_dat = pd.rolling_mean(pd_ax_dat, WINDOW_LEN)
+            sm_ax     = list(sm_ax_dat)[WINDOW_LEN - 1:]
 
-            rm = pd.rolling_mean(b, WINDOW_LEN)
-            rolling_list = list(rm)[WINDOW_LEN - 1:]
+            #: Variance of Moving Mean
+            variance["moving_mean"].append([np.log(np.var(sm_ax)), len(sm_ax)])
 
-            variance["moving_mean_v"].append([np.log(np.var(rolling_list)), len(rolling_list)])
-
-            sm_keypoints = Stupidity.extrema_keypoints(rolling_list)
-            variance["sm_keypoint"].append([np.log(np.var(list(zip(*sm_keypoints))[1])), len(sm_keypoints)])
-
+            sm_keypoints = Stupidity.extrema_keypoints(sm_ax)
             sm_polygon, sm_slopes, sm_lengths = Stupidity.polygon(sm_keypoints)
             sm_slope_binned = gradient_bin.remap(slopes)
-
-            variance["sm_gradient"].append([np.log(np.var(sm_slopes)), len(sm_slopes)])
-
-            variance["sm_gradient_binned"].append([np.log(np.var(sm_slope_binned)), len(sm_slope_binned)])
-
-            n_bin_pt = list(Stupidity.nmethod(ax_dat, 3, np.mean))
-            pl, sl, l = Stupidity.polygon(n_bin_pt)
-            nbin_sl_b = gradient_bin.remap(sl)
-            print(nbin_sl_b)
-            variance["three_var"].append([ np.log(np.var(nbin_sl_b)), len(nbin_sl_b)])
-
-
 
             length_s += len(ax_dat)
 
         v_rep = [Helper.pooled_variance(variance[_]) for _ in VAR_ORDERED]
 
-        return [sum(wave_energy) / 3] + v_rep + [Stupidity.dominant_axis(wave_energy)]
+        return [sum(wave_energy) / 3] + v_rep

@@ -538,23 +538,32 @@ class Gradient(object):
         #: Rule Estimators
         #: `_=_` Captures _ in lambda closure, hence allowing reuse.
         rules = [lambda x, _=_: _[0] <= x < _[1] for _ in intrvl_pair]
+        rules_abs = [lambda x, _=_: _[0] <= abs(x) < _[1] for _ in intrvl_pair]
 
         #: Remap Estimator
-        bins = zip(range(int(-90 / r), int(90 / r) + 1), rules)
+        bins = zip(range(int(-90 / r), int(90 / r) + 1), rules, rules_abs)
 
         return list(bins)
 
-    def bin(self, m):
+    def bin(self, m, absolute = False):
         """
         """
+        rule_index = 2 if absolute else 1
 
         for rule in self.bins:
-            if rule[1](m):
+            if rule[rule_index](m):
                 return rule[0]
 
         raise ValueError
 
-    def remap(self, m):
+    def remap(self, m, absolute = False):
         """
+        Remaps m with its corresponding bin values.
+
+        Args:
+            m (list): The list of gradients.
+            absolute (bool): Bins positive value of gradients (mirror)
+        Returns:
+            (list): Binned list.
         """
-        return list(map(self.bin, m))
+        return [self.bin(_, absolute) for _ in m]
