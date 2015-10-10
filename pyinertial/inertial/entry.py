@@ -58,14 +58,14 @@ def scratch_f():
             print(f)
             ftr.append(f)
 
-    hdr = ["w_e", "gradient", "gradient_binned", "keypoint", "moving_mean_v", "ax_var", "sm_keypoint", "sm_gradient", "sm_gradient_binned", "doma", "Name"]
+    hdr = ["w_e", "gradient", "gradient_binned", "keypoint", "moving_mean_v", "ax_var", "sm_keypoint", "sm_gradient", "sm_gradient_binned", "three_var", "doma", "Name"]
 
     #hsdr = ["w_e", "gradient_binned", "doma"]
 
-    hsdr = ["w_e", "ax_var", "keypoint", "gradient_binned", "sm_gradient_binned"]
+    hsdr = ["w_e", "ax_var", "keypoint", "gradient_binned", "sm_gradient_binned", "three_var"]
 
     df = pd.DataFrame(ftr, columns = hdr)
-    parallel_coordinates(df, cols = hsdr, class_column = "Name")
+    parallel_coordinates(df, class_column = "Name")
     plt.show()
 
 @main.command()

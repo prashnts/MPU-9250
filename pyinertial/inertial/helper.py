@@ -445,11 +445,65 @@ class Stupidity(object):
         pass
 
     @staticmethod
-    def threebin_mode(l):
+    def nbin(l, n = 3, paired = True):
+        """
+        Divides `l` (list) into n Bins.
+
+        Args:
+            l (list): List
+            n (int): Default 3. Number of Bins to divide l into
+            paired (bool): Default True. Returns the ordered pair with x centre
+                of the chunks.
+        Returns:
+            (generator): Iterable of list chunks.
+
+        Notes:
+            If the length of list is not divisible by n, the list is
+            truncated with reminder(len/n)
         """
 
+        c = math.floor(len(l) / n)
+        d = math.floor(len(l) / c)
+        e = math.floor(len(l) / (2 * n))
+
+        for i in range(0, d):
+            y = l[i * c:(i + 1) * c]
+            x = ((2 * i) + 1) * e
+            yield (x, y) if paired is True else y
+
+    @staticmethod
+    def nmethod(l, n, func):
         """
-        pass
+        Maps `func` to nbins returned by Stupidity.nbin, and returns ordered
+        pairs of (x, func(y)).
+
+        Args:
+            See Stupidity.nbin
+            func (callable): The Map function. MUST only accept a list.
+
+        Returns:
+            (generator): Mapped iterable.
+        """
+
+        points = Stupidity.nbin(l, n)
+        for x, y in points:
+            yield (x, func(y))
+
+    @staticmethod
+    def three_var(l):
+        """
+        Calculates three gradient of list using nmethod.
+        """
+        chunks = list(Stupidity.nbin(l, 3, False))
+        return [np.log(np.var(chunks)), 3]
+
+    @staticmethod
+    def three_grad_bin(l):
+        """
+        Calculates three gradient of list using nmethod.
+        """
+        chunks = list(Stupidity.nbin(l, 3, False))
+        return [np.log(np.var(chunks)), 3]
 
     @staticmethod
     def dominant_axis(en):

@@ -218,43 +218,50 @@ class Routines(object):
         """
 
         WINDOW_LEN = 5
-        VAR_ORDERED = ["gradient", "gradient_binned", "keypoint", "moving_mean_v", "ax_var", "sm_keypoint", "sm_gradient", "sm_gradient_binned"]
+        VAR_ORDERED = ["gradient", "gradient_binned", "keypoint", "moving_mean_v", "ax_var", "sm_keypoint", "sm_gradient", "sm_gradient_binned", "three_var"]
         wave_energy = []
         length_s = 0
         gradient_bin = Gradient()
         variance = {_: [] for _ in VAR_ORDERED}
 
         for ax_dat in axes_data:
-            #plt.ylim([-2, 2])
             wave_energy.append(Helper.discreet_wave_energy(ax_dat))
             keypoints = Stupidity.extrema_keypoints(ax_dat)
 
-            variance["keypoint"].append(np.log([np.var(list(zip(*keypoints))[1]), len(keypoints)]))
+            variance["keypoint"].append([ np.log(np.var(list(zip(*keypoints))[1])) , len(keypoints)])
 
             polygon, slopes, lengths = Stupidity.polygon(keypoints)
             slope_binned = gradient_bin.remap(slopes)
 
-            variance["gradient"].append(np.log([np.var(slopes), len(slopes)]))
-            variance["gradient_binned"].append(np.log([np.var(slope_binned), len(slope_binned)]))
+            variance["gradient"].append([ np.log(np.var(slopes)), len(slopes)])
+            variance["gradient_binned"].append([ np.log(np.var(slope_binned)), len(slope_binned)])
 
-            variance["ax_var"].append(np.log([np.var(ax_dat), len(ax_dat)]))
+            variance["ax_var"].append([ np.log(np.var(ax_dat)), len(ax_dat)])
 
             b = pd.Series(ax_dat)
-            #b.plot(style='k--')
 
             rm = pd.rolling_mean(b, WINDOW_LEN)
             rolling_list = list(rm)[WINDOW_LEN - 1:]
 
-            variance["moving_mean_v"].append([np.var(rolling_list), len(rolling_list)])
+            variance["moving_mean_v"].append([np.log(np.var(rolling_list)), len(rolling_list)])
 
             sm_keypoints = Stupidity.extrema_keypoints(rolling_list)
-            variance["sm_keypoint"].append([np.var(list(zip(*sm_keypoints))[1]), len(sm_keypoints)])
+            variance["sm_keypoint"].append([np.log(np.var(list(zip(*sm_keypoints))[1])), len(sm_keypoints)])
 
             sm_polygon, sm_slopes, sm_lengths = Stupidity.polygon(sm_keypoints)
             sm_slope_binned = gradient_bin.remap(slopes)
 
-            variance["sm_gradient"].append([np.var(sm_slopes), len(sm_slopes)])
-            variance["sm_gradient_binned"].append([np.var(sm_slope_binned), len(sm_slope_binned)])
+            variance["sm_gradient"].append([np.log(np.var(sm_slopes)), len(sm_slopes)])
+
+            variance["sm_gradient_binned"].append([np.log(np.var(sm_slope_binned)), len(sm_slope_binned)])
+
+            n_bin_pt = list(Stupidity.nmethod(ax_dat, 3, np.mean))
+            pl, sl, l = Stupidity.polygon(n_bin_pt)
+            nbin_sl_b = gradient_bin.remap(sl)
+            print(nbin_sl_b)
+            variance["three_var"].append([ np.log(np.var(nbin_sl_b)), len(nbin_sl_b)])
+
+
 
             length_s += len(ax_dat)
 
