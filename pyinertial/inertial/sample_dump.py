@@ -161,7 +161,7 @@ def ChainProbes(tag, **kwargs):
     twn = Twenté()
 
     click.echo("Yielding UCI")
-    if tag in uci.LABEL_DICT:
+    if tag in uci.LABEL_DICT_USED:
         yield from uci.probe(tag, **kwargs)
 
     click.echo("Yielding Twenté")

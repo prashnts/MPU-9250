@@ -237,7 +237,7 @@ class Routines(object):
             slope_binned_absolute = gradient_bin.remap(slopes, True)
 
             #: Variance of Gradient
-            variance["gradient"].append([ np.log(np.var(slopes)), len(slopes)])
+            variance["gradient"].append([ (np.var(slopes)), len(slopes)])
             variance["gradient_binned"].append([ np.var(slope_binned), len(slope_binned)])
 
             pd_ax_dat = pd.Series(ax_dat)

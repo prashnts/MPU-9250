@@ -20,7 +20,7 @@ from numpy import linalg as LA
 from scipy.optimize import curve_fit
 from itertools import chain
 from pandas.tools.plotting import lag_plot, autocorrelation_plot
-from pandas.tools.plotting import parallel_coordinates, andrews_curves
+from pandas.tools.plotting import parallel_coordinates, andrews_curves, scatter_matrix, radviz
 
 from .udp import UDP
 from .influx import Influx
@@ -44,24 +44,29 @@ def main(ctx):
 def scratch_f():
     plt.figure()
     plt.ylim([-10, 100])
+    # plt.xkcd()
     ftr = []
 
     for i in LabelDict:
         w = ChainProbes(i)
         fv_pr = []
         c = 0
+        print(i)
         for row in w:
             c += 1
-            if c == 50:
+            if c < 1000:
+                continue
+            elif c > 2200:
                 break
             f = Routines.feature_vector(zip(*row)) + [i]
-            print(f)
+            #print(f)
             ftr.append(f)
 
     hdr = ["w_e", "tssq", "gradient", "gradient_binned", "moving_mean", "Name"]
 
     df = pd.DataFrame(ftr, columns = hdr)
-    parallel_coordinates(df, class_column = "Name")
+    radviz(df, 'Name')
+    # parallel_coordinates(df, class_column = "Name")
     plt.show()
 
 @main.command()

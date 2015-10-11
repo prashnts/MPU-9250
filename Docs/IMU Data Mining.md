@@ -51,3 +51,4 @@ The feature vector \vFeature\ hence obtained was used to train the Support Vecto
 ## Supervised Learning using
 
 
+[['STANDING', 10074], ['SITTING', 9615], ['WALKING_UPSTAIRS', 7787], ['RUNNING', 4624], ['WALKING_DOWNSTAIRS', 6912], ['WALKING', 9679]]
