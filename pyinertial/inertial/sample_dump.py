@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from .helper import Helper
 import linecache
 import json
+import click
+
+from .helper import Helper
 
 class UCI(object):
     """
@@ -109,7 +111,16 @@ class Twenté(object):
     LABLES = "labels.json"
 
     FILES = ["Arm.csv", "Belt.csv", "Pocket.csv", "Wrist.csv"]
-    LABELS = ["Walking", "Running", "Sitting", "Standing", "Upstairs", "Downstairs"]
+    LABELS = ["WALKING", "RUNNING", "SITTING", "STANDING", "WALKING_UPSTAIRS", "WALKING_DOWNSTAIRS"]
+
+    LABEL_DICT_USED = {
+        "WALKING":              "1",
+        "WALKING_UPSTAIRS":     "2",
+        "WALKING_DOWNSTAIRS":   "3",
+        "SITTING":              "4",
+        "STANDING":             "5",
+        "RUNNING":              "7",
+    }
 
     def __init__(self):
         self._load_label()
@@ -125,16 +136,34 @@ class Twenté(object):
 
         for fdat, rng in self.labels[tag].items():
             file_name = self.DATA_DIR + fdat
-            line = lambda x: linecache.getline(file_name, x).rstrip().split(",")[:3]
+            line = lambda x: linecache.getline(file_name, x).rstrip().split(",")[1:4]
 
             for r in rng:
                 conc_dat[:] = []
                 for i in range(r[0], r[1] + 1):
                     l = line(i)
                     if len(l) == 3:
-                        conc_dat.append([float(_) for _ in l])
+                        conc_dat.append([float(_) / 10 for _ in l])
                 windows = Helper.sliding_window(conc_dat, window_len, step)
                 yield from windows
 
-class Samples(object):
-    pass
+LabelDict = {
+    "WALKING":              "1",
+    "WALKING_UPSTAIRS":     "2",
+    "WALKING_DOWNSTAIRS":   "3",
+    "SITTING":              "4",
+    "STANDING":             "5",
+    "RUNNING":              "7",
+}
+
+def ChainProbes(tag, **kwargs):
+    uci = UCI()
+    twn = Twenté()
+
+    click.echo("Yielding UCI")
+    if tag in uci.LABEL_DICT:
+        yield from uci.probe(tag, **kwargs)
+
+    click.echo("Yielding Twenté")
+    if tag in twn.LABELS:
+        yield from twn.probe(tag, **kwargs)

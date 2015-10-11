@@ -27,7 +27,7 @@ from .influx import Influx
 from .helper import Helper
 from .helper import Stupidity
 from .routines import Routines
-from .sample_dump import UCI, Twenté
+from .sample_dump import ChainProbes, LabelDict
 
 from grafana_annotation_server.cli import Annotation
 
@@ -42,15 +42,12 @@ def main(ctx):
 
 @main.command()
 def scratch_f():
-    s = UCI()
-    t = Twenté()
-    a = t.probe("Walking")
-
     plt.figure()
+    plt.ylim([-10, 100])
     ftr = []
 
-    for i in s.LABEL_DICT_USED:
-        w = s.probe(i)
+    for i in LabelDict:
+        w = ChainProbes(i)
         fv_pr = []
         c = 0
         for row in w:
