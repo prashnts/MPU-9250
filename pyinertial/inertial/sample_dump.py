@@ -3,8 +3,9 @@
 
 from .helper import Helper
 import linecache
+import json
 
-class Samples(object):
+class UCI(object):
     """
     Provides abstracted access to the raw dataset.
     Obtained from http://archive.ics.uci.edu/.
@@ -17,7 +18,7 @@ class Samples(object):
     This behaviour may be changed by changing the constant DATA_DIR.
     """
 
-    DATA_DIR = "/data/_inertial_db/"
+    DATA_DIR = "/data/_inertial_db/UCI/"
     LABLES = "labels.txt"
     ACCEL_FILE_FMT = "acc_exp{0}_user{1}.txt"
     GYRO_FILE_FMT  = "gyro_exp{0}_user{1}.txt"
@@ -37,8 +38,8 @@ class Samples(object):
     }
     LABEL_DICT_USED = {
         "WALKING":              "1",
-        "WALKING_UPSTAIRS":     "1",
-        "WALKING_DOWNSTAIRS":   "1",
+        "WALKING_UPSTAIRS":     "2",
+        "WALKING_DOWNSTAIRS":   "3",
         "SITTING":              "4",
         "STANDING":             "5",
         "LAYING":               "6",
@@ -97,3 +98,43 @@ class Samples(object):
 
         except FileNotFoundError:
             raise ValueError
+
+class Twenté(object):
+    """
+    Provides access to the dataset from Twenté university.
+
+    See `UCI` for more details.
+    """
+    DATA_DIR = "/data/_inertial_db/Twente/"
+    LABLES = "labels.json"
+
+    FILES = ["Arm.csv", "Belt.csv", "Pocket.csv", "Wrist.csv"]
+    LABELS = ["Walking", "Running", "Sitting", "Standing", "Upstairs", "Downstairs"]
+
+    def __init__(self):
+        self._load_label()
+
+    def _load_label(self):
+        with open(self.DATA_DIR + self.LABLES) as minion:
+            self.labels = json.loads(minion.read())
+
+    def probe(self, tag, window_len = 64, step = 25):
+        """
+        """
+        conc_dat = []
+
+        for fdat, rng in self.labels[tag].items():
+            file_name = self.DATA_DIR + fdat
+            line = lambda x: linecache.getline(file_name, x).rstrip().split(",")[:3]
+
+            for r in rng:
+                conc_dat[:] = []
+                for i in range(r[0], r[1] + 1):
+                    l = line(i)
+                    if len(l) == 3:
+                        conc_dat.append([float(_) for _ in l])
+                windows = Helper.sliding_window(conc_dat, window_len, step)
+                yield from windows
+
+class Samples(object):
+    pass

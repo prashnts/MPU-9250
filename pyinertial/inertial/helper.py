@@ -197,6 +197,28 @@ class Helper(object):
 
         return sum([(l - 1) * v for v, l in sequence]) / sum([(l - 1) for _, l in sequence])
 
+    @staticmethod
+    def sum_of_square(l):
+        """
+        """
+        lb = np.mean(l)
+        return sum([(x - lb)**2 for x in l])
+
+    @staticmethod
+    def ranges(seq):
+        """
+        """
+        start, end = seq[0], seq[0]
+        count = start
+        for item in seq:
+            if not count == item:
+                yield start, end
+                start, end = item, item
+                count = item
+            end = item
+            count += 1
+        yield start, end
+
 class Stupidity(object):
     """
     Stupid Curve Approximation Methods, and Evaluations.

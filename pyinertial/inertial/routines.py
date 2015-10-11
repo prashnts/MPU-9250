@@ -220,6 +220,7 @@ class Routines(object):
         WINDOW_LEN = 32
         VAR_ORDERED = ["gradient", "gradient_binned", "moving_mean"]
         wave_energy = []
+        tssq = []
         length_s = 0
         gradient_bin = Gradient()
         variance = {_: [] for _ in VAR_ORDERED}
@@ -227,6 +228,7 @@ class Routines(object):
         for ax_dat in axes_data:
             #: Wave Energy
             wave_energy.append(Helper.discreet_wave_energy(ax_dat))
+            tssq.append(Helper.sum_of_square(ax_dat))
 
             #: Keypoint Polygon
             keypoints = Stupidity.extrema_keypoints(ax_dat)
@@ -254,4 +256,4 @@ class Routines(object):
 
         v_rep = [Helper.pooled_variance(variance[_]) for _ in VAR_ORDERED]
 
-        return [sum(wave_energy) / 3] + v_rep
+        return [sum(wave_energy) / 3, sum(tssq)] + v_rep
