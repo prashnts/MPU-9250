@@ -44,7 +44,7 @@ class UCI(object):
         "WALKING_DOWNSTAIRS":   "3",
         "SITTING":              "4",
         "STANDING":             "5",
-        "LAYING":               "6",
+        #"LAYING":               "6",
     }
 
     def __init__(self):
@@ -119,7 +119,7 @@ class Twenté(object):
         "WALKING_DOWNSTAIRS":   "3",
         "SITTING":              "4",
         "STANDING":             "5",
-        "RUNNING":              "7",
+        "RUNNING":              "6",
     }
 
     def __init__(self):
@@ -153,16 +153,37 @@ LabelDict = {
     "WALKING_DOWNSTAIRS":   "3",
     "SITTING":              "4",
     "STANDING":             "5",
-    "RUNNING":              "7",
+    "RUNNING":              "6",
 }
+LabelDictC = {
+    "WALKING":              "1",
+    "WALKING_UPSTAIRS":     "1",
+    "WALKING_DOWNSTAIRS":   "1",
+    "SITTING":              "2",
+    "STANDING":             "2",
+    "RUNNING":              "3",
+}
+Labels = [
+    "WALKING",
+    "WALKING_UPSTAIRS",
+    "WALKING_DOWNSTAIRS",
+    "SITTING",
+    "STANDING",
+    "RUNNING",
+]
+LabelsC = [
+    "WALKING",
+    "STATIONARY",
+    "RUNNING",
+]
 
 def ChainProbes(tag, **kwargs):
     uci = UCI()
     twn = Twenté()
 
-    click.echo("Yielding UCI")
-    if tag in uci.LABEL_DICT_USED:
-        yield from uci.probe(tag, **kwargs)
+    # click.echo("Yielding UCI")
+    # if tag in uci.LABEL_DICT_USED:
+    #     yield from uci.probe(tag, **kwargs)
 
     click.echo("Yielding Twenté")
     if tag in twn.LABELS:

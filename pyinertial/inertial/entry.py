@@ -16,6 +16,8 @@ import itertools
 from mpl_toolkits.mplot3d import Axes3D
 from sklearn.svm import SVC
 from sklearn.decomposition import PCA
+from sklearn.cross_validation import train_test_split
+from sklearn.metrics import confusion_matrix, accuracy_score, classification_report
 from numpy import linalg as LA
 from scipy.optimize import curve_fit
 from itertools import chain
@@ -27,7 +29,7 @@ from .influx import Influx
 from .helper import Helper
 from .helper import Stupidity
 from .routines import Routines
-from .sample_dump import ChainProbes, LabelDict
+from .sample_dump import ChainProbes, LabelDict, Labels, LabelDictC, LabelsC
 
 from grafana_annotation_server.cli import Annotation
 
@@ -43,7 +45,6 @@ def main(ctx):
 @main.command()
 def scratch_f():
     plt.figure()
-    plt.ylim([-10, 100])
     # plt.xkcd()
     ftr = []
 
@@ -56,7 +57,7 @@ def scratch_f():
             c += 1
             if c < 1000:
                 continue
-            elif c > 2200:
+            elif c > 1200:
                 break
             f = Routines.feature_vector(zip(*row)) + [i]
             #print(f)
@@ -66,43 +67,69 @@ def scratch_f():
 
     df = pd.DataFrame(ftr, columns = hdr)
     radviz(df, 'Name')
-    # parallel_coordinates(df, class_column = "Name")
     plt.show()
+    # parallel_coordinates(df, class_column = "Name")
+    # plt.show()
 
 @main.command()
 @click.option('--kernel', '-k', type=str, help='SVC Kernel')
 @click.option('--degree', '-d', type=int, help='SVC Degree (Only for Polynomial)')
-@click.argument('pickle_svm_object', type=click.File('wb'))
-def train(pickle_svm_object, kernel = 'poly', degree = 2):
+# @click.argument('pickle_svm_object', type=click.File('wb'))
+# def train(pickle_svm_object, kernel = 'poly', degree = 2):
+def train(kernel = 'poly', degree = 2):
 
     click.echo("😐  Creating features.")
 
-    s = Samples()
-    plt.figure()
     X = []
     Y = []
 
-    for i in s.LABEL_DICT_USED:
-        w = s.probe(i)
+    for i in LabelDict:
+        w = ChainProbes(i)
         fv_pr = []
         c = 0
+        print(i)
         for row in w:
             c += 1
-            print(c)
-            # if c == 100:
-            #     break
+            if c == 300:
+                break
             X.append(Routines.feature_vector(zip(*row)))
-            Y.append(int(s.LABEL_DICT_USED[i]))
+            Y.append(int(LabelDict[i]))
 
     click.echo("😐  Done Creating features.")
     click.echo("😏  Training SVM.")
 
-    support_vector_classifier = SVC(kernel = 'rbf')
-    support_vector_classifier.fit(X, Y)
+    X_train, X_test, y_train, y_test = train_test_split(X, Y, random_state=0)
+
+    # Run classifier
+    classifier = SVC(kernel='rbf', class_weight='auto', gamma = 0.1, C=100)
+    y_pred = classifier.fit(X_train, y_train).predict(X_test)
+
+    # Compute confusion matrix
+    cm = confusion_matrix(y_test, y_pred)
+    cm_normalized = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+    #Accuracy
+    ac = accuracy_score(y_test, y_pred, Labels)
+    #CR
+    cr = classification_report(y_test, y_pred, target_names=Labels)
+    print(cm)
+    print(cm_normalized)
+    print(ac)
+    print(cr)
+
+    # Show confusion matrix in a separate window
+    plt.matshow(cm_normalized)
+    plt.title('Confusion matrix')
+    plt.colorbar()
+    tick_marks = np.arange(len(Labels))
+    plt.xticks(tick_marks, Labels, rotation=45)
+    plt.yticks(tick_marks, Labels)
+    plt.ylabel('True label')
+    plt.xlabel('Predicted label')
+    plt.show()
 
     click.echo("😄  Dumping SVM Object.")
 
-    pickle.dump(support_vector_classifier, pickle_svm_object)
+    # pickle.dump(classifier, pickle_svm_object)
 
 
 @main.command()

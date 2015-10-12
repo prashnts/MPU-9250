@@ -256,4 +256,4 @@ class Routines(object):
 
         v_rep = [Helper.pooled_variance(variance[_]) for _ in VAR_ORDERED]
 
-        return [sum(wave_energy) / 3, sum(tssq)] + v_rep
+        return [sum(wave_energy) / 3, sum(tssq)] + v_rep + tssq #+ wave_energy
