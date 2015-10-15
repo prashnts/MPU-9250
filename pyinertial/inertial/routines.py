@@ -14,6 +14,7 @@ from scipy.signal import argrelmax, argrelmin
 from .helper import Helper
 from .helper import Stupidity
 from .helper import Gradient
+from .sample_dump import WINDOWLEN, STEP
 
 import pandas as pd
 
@@ -217,7 +218,7 @@ class Routines(object):
             (list): Feature Vector
         """
 
-        WINDOW_LEN = 32
+        WINDOW_LEN = int(WINDOWLEN / 2)
         VAR_ORDERED = ["gradient", "gradient_binned", "moving_mean"]
         wave_energy = []
         tssq = []
@@ -256,4 +257,4 @@ class Routines(object):
 
         v_rep = [Helper.pooled_variance(variance[_]) for _ in VAR_ORDERED]
 
-        return [sum(wave_energy) / 3, sum(tssq)] + v_rep + tssq #+ wave_energy
+        return [sum(wave_energy) / 3, sum(tssq)] + v_rep #+ tssq #+ wave_energy

@@ -29,7 +29,7 @@ from .influx import Influx
 from .helper import Helper
 from .helper import Stupidity
 from .routines import Routines
-from .sample_dump import ChainProbes, LabelDict, Labels, LabelDictC, LabelsC
+from .sample_dump import ChainProbes, LabelDict, Labels, LabelDictC, LabelsC, LabelDictD, LabelsD
 
 from grafana_annotation_server.cli import Annotation
 
@@ -83,17 +83,17 @@ def train(kernel = 'poly', degree = 2):
     X = []
     Y = []
 
-    for i in LabelDict:
+    for i in LabelDictD:
         w = ChainProbes(i)
         fv_pr = []
         c = 0
         print(i)
         for row in w:
             c += 1
-            if c == 300:
-                break
+            # if c == 300:
+            #     break
             X.append(Routines.feature_vector(zip(*row)))
-            Y.append(int(LabelDict[i]))
+            Y.append(int(LabelDictD[i]))
 
     click.echo("😐  Done Creating features.")
     click.echo("😏  Training SVM.")
@@ -108,9 +108,9 @@ def train(kernel = 'poly', degree = 2):
     cm = confusion_matrix(y_test, y_pred)
     cm_normalized = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
     #Accuracy
-    ac = accuracy_score(y_test, y_pred, Labels)
+    ac = accuracy_score(y_test, y_pred, LabelsD)
     #CR
-    cr = classification_report(y_test, y_pred, target_names=Labels)
+    cr = classification_report(y_test, y_pred, target_names=LabelsD)
     print(cm)
     print(cm_normalized)
     print(ac)
@@ -120,9 +120,9 @@ def train(kernel = 'poly', degree = 2):
     plt.matshow(cm_normalized)
     plt.title('Confusion matrix')
     plt.colorbar()
-    tick_marks = np.arange(len(Labels))
-    plt.xticks(tick_marks, Labels, rotation=45)
-    plt.yticks(tick_marks, Labels)
+    tick_marks = np.arange(len(LabelsD))
+    plt.xticks(tick_marks, LabelsD, rotation=45)
+    plt.yticks(tick_marks, LabelsD)
     plt.ylabel('True label')
     plt.xlabel('Predicted label')
     plt.show()

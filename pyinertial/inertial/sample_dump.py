@@ -7,6 +7,9 @@ import click
 
 from .helper import Helper
 
+WINDOWLEN = 50
+STEP = 20
+
 class UCI(object):
     """
     Provides abstracted access to the raw dataset.
@@ -50,7 +53,7 @@ class UCI(object):
     def __init__(self):
         self._load_label()
 
-    def probe(self, tag, window_len = 64, step = 25):
+    def probe(self, tag, window_len = WINDOWLEN, step = STEP):
         """
         """
 
@@ -129,7 +132,7 @@ class Twenté(object):
         with open(self.DATA_DIR + self.LABLES) as minion:
             self.labels = json.loads(minion.read())
 
-    def probe(self, tag, window_len = 64, step = 25):
+    def probe(self, tag, window_len = WINDOWLEN, step = STEP):
         """
         """
         conc_dat = []
@@ -163,6 +166,14 @@ LabelDictC = {
     "STANDING":             "2",
     "RUNNING":              "3",
 }
+LabelDictD = {
+    "WALKING":              "1",
+    "WALKING_UPSTAIRS":     "2",
+    "WALKING_DOWNSTAIRS":   "3",
+    "SITTING":              "4",
+    "STANDING":             "4",
+    "RUNNING":              "5",
+}
 Labels = [
     "WALKING",
     "WALKING_UPSTAIRS",
@@ -176,14 +187,21 @@ LabelsC = [
     "STATIONARY",
     "RUNNING",
 ]
+LabelsD = [
+    "WALKING",
+    "WALKING_UPSTAIRS",
+    "WALKING_DOWNSTAIRS",
+    "STATIONARY",
+    "RUNNING",
+]
 
 def ChainProbes(tag, **kwargs):
     uci = UCI()
     twn = Twenté()
 
-    # click.echo("Yielding UCI")
-    # if tag in uci.LABEL_DICT_USED:
-    #     yield from uci.probe(tag, **kwargs)
+    click.echo("Yielding UCI")
+    if tag in uci.LABEL_DICT_USED:
+        yield from uci.probe(tag, **kwargs)
 
     click.echo("Yielding Twenté")
     if tag in twn.LABELS:
