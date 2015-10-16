@@ -68,8 +68,8 @@ def scratch_f():
     df = pd.DataFrame(ftr, columns = hdr)
     radviz(df, 'Name')
     plt.show()
-    # parallel_coordinates(df, class_column = "Name")
-    # plt.show()
+    parallel_coordinates(df, class_column = "Name")
+    plt.show()
 
 @main.command()
 @click.option('--kernel', '-k', type=str, help='SVC Kernel')
@@ -83,17 +83,19 @@ def train(kernel = 'poly', degree = 2):
     X = []
     Y = []
 
-    for i in LabelDictD:
+    lab_use, lab_use_dict = Labels, LabelDict
+
+    for i in lab_use_dict:
         w = ChainProbes(i)
         fv_pr = []
         c = 0
-        print(i)
+        print(i, lab_use_dict[i])
         for row in w:
             c += 1
             # if c == 300:
             #     break
             X.append(Routines.feature_vector(zip(*row)))
-            Y.append(int(LabelDictD[i]))
+            Y.append(int(lab_use_dict[i]))
 
     click.echo("😐  Done Creating features.")
     click.echo("😏  Training SVM.")
@@ -101,16 +103,16 @@ def train(kernel = 'poly', degree = 2):
     X_train, X_test, y_train, y_test = train_test_split(X, Y, random_state=0)
 
     # Run classifier
-    classifier = SVC(kernel='rbf', class_weight='auto', gamma = 0.1, C=100)
+    classifier = SVC(kernel='rbf', class_weight='auto', gamma = 0.00001, C=1000000)
     y_pred = classifier.fit(X_train, y_train).predict(X_test)
 
     # Compute confusion matrix
     cm = confusion_matrix(y_test, y_pred)
     cm_normalized = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
     #Accuracy
-    ac = accuracy_score(y_test, y_pred, LabelsD)
+    ac = accuracy_score(y_test, y_pred, lab_use)
     #CR
-    cr = classification_report(y_test, y_pred, target_names=LabelsD)
+    cr = classification_report(y_test, y_pred, target_names=lab_use)
     print(cm)
     print(cm_normalized)
     print(ac)
@@ -120,9 +122,9 @@ def train(kernel = 'poly', degree = 2):
     plt.matshow(cm_normalized)
     plt.title('Confusion matrix')
     plt.colorbar()
-    tick_marks = np.arange(len(LabelsD))
-    plt.xticks(tick_marks, LabelsD, rotation=45)
-    plt.yticks(tick_marks, LabelsD)
+    tick_marks = np.arange(len(lab_use))
+    plt.xticks(tick_marks, lab_use, rotation=45)
+    plt.yticks(tick_marks, lab_use)
     plt.ylabel('True label')
     plt.xlabel('Predicted label')
     plt.show()

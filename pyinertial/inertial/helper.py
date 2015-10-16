@@ -557,6 +557,7 @@ class Gradient(object):
         intrvl_v.append(float("inf"))
         intrvl_pair = list(zip(intrvl_v[0:], intrvl_v[1:]))
 
+        print(intrvl_pair)
         #: Rule Estimators
         #: `_=_` Captures _ in lambda closure, hence allowing reuse.
         rules = [lambda x, _=_: _[0] <= x < _[1] for _ in intrvl_pair]

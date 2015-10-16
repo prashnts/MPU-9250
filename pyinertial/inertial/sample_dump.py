@@ -113,7 +113,6 @@ class Twenté(object):
     DATA_DIR = "/data/_inertial_db/Twente/"
     LABLES = "labels.json"
 
-    FILES = ["Arm.csv", "Belt.csv", "Pocket.csv", "Wrist.csv"]
     LABELS = ["WALKING", "RUNNING", "SITTING", "STANDING", "WALKING_UPSTAIRS", "WALKING_DOWNSTAIRS"]
 
     LABEL_DICT_USED = {
@@ -150,6 +149,27 @@ class Twenté(object):
                 windows = Helper.sliding_window(conc_dat, window_len, step)
                 yield from windows
 
+class TwentéTwo(Twenté):
+    """
+    Provides access to the dataset from Twenté university.
+
+    See `Twenté` for more details.
+    """
+
+    DATA_DIR = "/data/_inertial_db/TwenteTwo/"
+
+    LABELS = ["WALKING", "JOGGING", "SITTING", "STANDING", "WALKING_UPSTAIRS", "WALKING_DOWNSTAIRS", "BIKING"]
+
+    LABEL_DICT_USED = {
+        "WALKING":              "1",
+        "WALKING_UPSTAIRS":     "2",
+        "WALKING_DOWNSTAIRS":   "3",
+        "SITTING":              "4",
+        "STANDING":             "5",
+        "JOGGING":              "6",
+        "BIKING":               "7",
+    }
+
 LabelDict = {
     "WALKING":              "1",
     "WALKING_UPSTAIRS":     "2",
@@ -157,6 +177,8 @@ LabelDict = {
     "SITTING":              "4",
     "STANDING":             "5",
     "RUNNING":              "6",
+    "JOGGING":              "7",
+    "BIKING":               "8",
 }
 LabelDictC = {
     "WALKING":              "1",
@@ -166,14 +188,6 @@ LabelDictC = {
     "STANDING":             "2",
     "RUNNING":              "3",
 }
-LabelDictD = {
-    "WALKING":              "1",
-    "WALKING_UPSTAIRS":     "2",
-    "WALKING_DOWNSTAIRS":   "3",
-    "SITTING":              "4",
-    "STANDING":             "4",
-    "RUNNING":              "5",
-}
 Labels = [
     "WALKING",
     "WALKING_UPSTAIRS",
@@ -181,23 +195,37 @@ Labels = [
     "SITTING",
     "STANDING",
     "RUNNING",
+    "JOGGING",
+    "BIKING",
 ]
 LabelsC = [
     "WALKING",
     "STATIONARY",
     "RUNNING",
 ]
+
+LabelDictD = {
+    "WALKING":              "1",
+    "WALKING_UPSTAIRS":     "1",
+    "WALKING_DOWNSTAIRS":   "1",
+    "SITTING":              "2",
+    "STANDING":             "2",
+    "RUNNING":              "3",
+    "BIKING":               "4",
+    "JOGGING":              "5",
+}
 LabelsD = [
     "WALKING",
-    "WALKING_UPSTAIRS",
-    "WALKING_DOWNSTAIRS",
     "STATIONARY",
     "RUNNING",
+    "BIKING",
+    "JOGGING",
 ]
 
 def ChainProbes(tag, **kwargs):
     uci = UCI()
     twn = Twenté()
+    twn2 = TwentéTwo()
 
     click.echo("Yielding UCI")
     if tag in uci.LABEL_DICT_USED:
@@ -206,3 +234,7 @@ def ChainProbes(tag, **kwargs):
     click.echo("Yielding Twenté")
     if tag in twn.LABELS:
         yield from twn.probe(tag, **kwargs)
+
+    click.echo("Yielding Twenté Two")
+    if tag in twn2.LABELS:
+        yield from twn2.probe(tag, **kwargs)
