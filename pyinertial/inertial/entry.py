@@ -29,7 +29,7 @@ from .influx import Influx
 from .helper import Helper
 from .helper import Stupidity
 from .routines import Routines
-from .sample_dump import ChainProbes, LabelDict, Labels, LabelDictC, LabelsC, LabelDictD, LabelsD
+from .sample_dump import ChainProbes, LabelDict, Labels, LabelDictC, LabelsC, LabelDictD, LabelsD, LabelDictE, LabelsE
 
 from grafana_annotation_server.cli import Annotation
 
@@ -83,19 +83,19 @@ def train(kernel = 'poly', degree = 2):
     X = []
     Y = []
 
-    lab_use, lab_use_dict = Labels, LabelDict
+    lab_use, lab_use_dict = LabelsE, LabelDictE
 
     for i in lab_use_dict:
         w = ChainProbes(i)
         fv_pr = []
         c = 0
-        print(i, lab_use_dict[i])
         for row in w:
             c += 1
             # if c == 300:
             #     break
             X.append(Routines.feature_vector(zip(*row)))
             Y.append(int(lab_use_dict[i]))
+        print(i,c, lab_use_dict[i])
 
     click.echo("😐  Done Creating features.")
     click.echo("😏  Training SVM.")

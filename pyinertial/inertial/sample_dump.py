@@ -7,8 +7,8 @@ import click
 
 from .helper import Helper
 
-WINDOWLEN = 50
-STEP = 20
+WINDOWLEN = 100
+STEP = 10
 
 class UCI(object):
     """
@@ -180,14 +180,6 @@ LabelDict = {
     "JOGGING":              "7",
     "BIKING":               "8",
 }
-LabelDictC = {
-    "WALKING":              "1",
-    "WALKING_UPSTAIRS":     "1",
-    "WALKING_DOWNSTAIRS":   "1",
-    "SITTING":              "2",
-    "STANDING":             "2",
-    "RUNNING":              "3",
-}
 Labels = [
     "WALKING",
     "WALKING_UPSTAIRS",
@@ -198,6 +190,15 @@ Labels = [
     "JOGGING",
     "BIKING",
 ]
+LabelDictC = {
+    "WALKING":              "1",
+    "WALKING_UPSTAIRS":     "1",
+    "WALKING_DOWNSTAIRS":   "1",
+    "SITTING":              "2",
+    "STANDING":             "2",
+    "RUNNING":              "3",
+}
+
 LabelsC = [
     "WALKING",
     "STATIONARY",
@@ -216,6 +217,24 @@ LabelDictD = {
 }
 LabelsD = [
     "WALKING",
+    "STATIONARY",
+    "RUNNING",
+    "BIKING",
+    "JOGGING",
+]
+LabelDictE = {
+    "WALKING":              "1",
+    "WALKING_UPSTAIRS":     "2",
+    "WALKING_DOWNSTAIRS":   "2",
+    "SITTING":              "3",
+    "STANDING":             "3",
+    "RUNNING":              "4",
+    "BIKING":               "5",
+    "JOGGING":              "6",
+}
+LabelsE = [
+    "WALKING",
+    "STAIR",
     "STATIONARY",
     "RUNNING",
     "BIKING",
