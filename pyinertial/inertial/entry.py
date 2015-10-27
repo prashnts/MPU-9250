@@ -18,10 +18,10 @@ from mpl_toolkits.mplot3d import Axes3D
 from sklearn.svm import SVC
 from sklearn import tree
 from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.externals.six import StringIO
 from sklearn.decomposition import PCA
 from sklearn.cross_validation import train_test_split
-from sklearn.metrics import confusion_matrix, accuracy_score, classification_report
 from numpy import linalg as LA
 from scipy.optimize import curve_fit
 from itertools import chain
@@ -32,6 +32,7 @@ from .udp import UDP
 from .influx import Influx
 from .helper import Helper
 from .helper import Stupidity
+from .helper import Tools
 from .routines import Routines
 from .sample_dump import ChainProbes, LabelDict, Labels, LabelDictC, LabelsC, LabelDictD, LabelsD, LabelDictE, LabelsE
 
@@ -143,57 +144,38 @@ def train_tree():
 
     lab_use, lab_use_dict = LabelsE, LabelDictE
 
+    cnts = []
+
     for i in lab_use_dict:
         w = ChainProbes(i)
         fv_pr = []
         c = 0
         for row in w:
             c += 1
-            if c == 1000:
-                break
+            # if c == 1000:
+            #     break
             X.append(Routines.feature_vector(zip(*row)))
             Y.append(int(lab_use_dict[i]))
-        print(i,c, lab_use_dict[i])
+        cnts.append([i, c, lab_use_dict[i]])
+        print([i, c, lab_use_dict[i]])
+
+    print(cnts)
 
     click.echo("😐  Done Creating features.")
     click.echo("😏  Training SVM.")
 
     X_train, X_test, y_train, y_test = train_test_split(X, Y, random_state=0)
 
-    # Run classifier
-    classifier = DecisionTreeClassifier()
-    y_pred = classifier.fit(X_train, y_train).predict(X_test)
+    dtc = DecisionTreeClassifier()
+    rfc = RandomForestClassifier(n_estimators=20)
+    srb = SVC(kernel='rbf', class_weight='auto', gamma = 0.00001, C=1000000)
+    y_pred_one = dtc.fit(X_train, y_train).predict(X_test)
+    y_pred_two = srb.fit(X_train, y_train).predict(X_test)
+    y_pred_thr = rfc.fit(X_train, y_train).predict(X_test)
 
-    with open("iris.dot", 'w') as f:
-        f = tree.export_graphviz(classifier, out_file=f)
-
-    # Compute confusion matrix
-    cm = confusion_matrix(y_test, y_pred)
-    cm_normalized = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
-    #Accuracy
-    ac = accuracy_score(y_test, y_pred, lab_use)
-    #CR
-    cr = classification_report(y_test, y_pred, target_names=lab_use)
-    print(cm)
-    print(cm_normalized)
-    print(ac)
-    print(cr)
-
-    # Show confusion matrix in a separate window
-    plt.matshow(cm_normalized)
-    plt.title('Confusion matrix')
-    plt.colorbar()
-    tick_marks = np.arange(len(lab_use))
-    plt.xticks(tick_marks, lab_use, rotation=45)
-    plt.yticks(tick_marks, lab_use)
-    plt.ylabel('True label')
-    plt.xlabel('Predicted label')
-    plt.show()
-
-    click.echo("😄  Dumping SVM Object.")
-
-    # pickle.dump(classifier, pickle_svm_object)
-
+    Tools.classification_report("DTC", y_test, y_pred_one, lab_use)
+    Tools.classification_report("SVC", y_test, y_pred_two, lab_use)
+    Tools.classification_report("RFC", y_test, y_pred_two, lab_use)
 
 @main.command()
 @click.argument('pickle_svm_object', type=click.File('rb'))

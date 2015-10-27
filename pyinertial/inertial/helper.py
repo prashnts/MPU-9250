@@ -6,12 +6,17 @@
 
 import click
 import math
+import time
 import numpy as np
+import matplotlib.pyplot as plt
 import inspect
 
 from scipy.optimize import curve_fit
 from scipy.signal import argrelmax, argrelmin
+from sklearn.metrics import confusion_matrix, accuracy_score, classification_report
 from itertools import cycle
+
+from . import colormap
 
 class Helper(object):
     """
@@ -590,3 +595,38 @@ class Gradient(object):
             (list): Binned list.
         """
         return [self.bin(_, absolute) for _ in m]
+
+class Tools(object):
+    @staticmethod
+    def classification_report(title, test, pred, lab_use):
+        """
+        """
+        cm      = confusion_matrix(test, pred)
+        cm_nrm  = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+        acc_sc  = accuracy_score(test, pred, lab_use)
+        cls_rep = classification_report(test, pred, target_names=lab_use)
+
+        plt.style.use(['bmh','ggplot'])
+        fig = plt.figure(figsize=(112, 81), dpi=900)
+        la = "{0}_{1}".format(title, int(time.time()))
+
+        with open(la + ".report.txt", "w") as minion:
+            minion.write(title)
+            minion.write("\nNormalised Confusion Matrix\n")
+            minion.write(str(cm_nrm))
+            minion.write("\nAccuracy Score\n")
+            minion.write(str(acc_sc))
+            minion.write("\nConfusion Matrix\n")
+            minion.write(str(cm))
+            minion.write("\nClassification Report\n")
+            minion.write(str(cls_rep))
+            minion.write("\n\n")
+
+        plt.matshow(cm_nrm)
+        plt.colorbar()
+        tick_marks = np.arange(len(lab_use))
+        plt.xticks(tick_marks, lab_use)
+        plt.yticks(tick_marks, lab_use)
+        plt.ylabel('True label')
+        plt.xlabel('Predicted label')
+        plt.savefig(la + ".svg")
