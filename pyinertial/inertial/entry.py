@@ -50,19 +50,19 @@ def main(ctx):
 @main.command()
 def scratch_f():
     plt.figure()
+    # plt.style.use(['bmh','ggplot'])
     # plt.xkcd()
     ftr = []
 
-    for i in LabelDict:
+    lab = ["WALKING", "RUNNING", "JOGGING", "SITTING", "BIKING", "WALKING_UPSTAIRS"]
+    for i in lab:
         w = ChainProbes(i)
         fv_pr = []
         c = 0
         print(i)
         for row in w:
             c += 1
-            if c < 1000:
-                continue
-            elif c > 1200:
+            if c == 1000:
                 break
             f = Routines.feature_vector(zip(*row)) + [i]
             #print(f)
@@ -71,71 +71,17 @@ def scratch_f():
     hdr = ["w_e", "tssq", "gradient", "gradient_binned", "moving_mean", "Name"]
 
     df = pd.DataFrame(ftr, columns = hdr)
-    radviz(df, 'Name')
+
+    # plt..yscale('log')
+
+    radviz(df, class_column = "Name", alpha=0.01)
     plt.show()
-    parallel_coordinates(df, class_column = "Name")
-    plt.show()
+    # andrews_curves(df, 'Name')
+    # plt.show()
 
 @main.command()
-def train():
-
-    click.echo("😐  Creating features.")
-
-    X = []
-    Y = []
-
-    lab_use, lab_use_dict = LabelsE, LabelDictE
-
-    for i in lab_use_dict:
-        w = ChainProbes(i)
-        fv_pr = []
-        c = 0
-        for row in w:
-            c += 1
-            if c == 300:
-                break
-            X.append(Routines.feature_vector(zip(*row)))
-            Y.append(int(lab_use_dict[i]))
-        print(i,c, lab_use_dict[i])
-
-    click.echo("😐  Done Creating features.")
-    click.echo("😏  Training SVM.")
-
-    X_train, X_test, y_train, y_test = train_test_split(X, Y, random_state=0)
-
-    # Run classifier
-    classifier = SVC(kernel='rbf', class_weight='auto', gamma = 0.00001, C=1000000)
-    y_pred = classifier.fit(X_train, y_train).predict(X_test)
-
-    # Compute confusion matrix
-    cm = confusion_matrix(y_test, y_pred)
-    cm_normalized = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
-    #Accuracy
-    ac = accuracy_score(y_test, y_pred, lab_use)
-    #CR
-    cr = classification_report(y_test, y_pred, target_names=lab_use)
-    print(cm)
-    print(cm_normalized)
-    print(ac)
-    print(cr)
-
-    # Show confusion matrix in a separate window
-    plt.matshow(cm_normalized)
-    plt.title('Confusion matrix')
-    plt.colorbar()
-    tick_marks = np.arange(len(lab_use))
-    plt.xticks(tick_marks, lab_use, rotation=45)
-    plt.yticks(tick_marks, lab_use)
-    plt.ylabel('True label')
-    plt.xlabel('Predicted label')
-    plt.show()
-
-    click.echo("😄  Dumping SVM Object.")
-
-    # pickle.dump(classifier, pickle_svm_object)
-
-@main.command()
-def train_tree():
+@click.argument('dmp', type=click.File('wb'))
+def train_tree(dmp):
 
     click.echo("😐  Creating features.")
 
@@ -152,8 +98,8 @@ def train_tree():
         c = 0
         for row in w:
             c += 1
-            # if c == 1000:
-            #     break
+            if c == 2000:
+                break
             X.append(Routines.feature_vector(zip(*row)))
             Y.append(int(lab_use_dict[i]))
         cnts.append([i, c, lab_use_dict[i]])
@@ -162,36 +108,25 @@ def train_tree():
     print(cnts)
 
     click.echo("😐  Done Creating features.")
-    click.echo("😏  Training SVM.")
+    click.echo("😏  Training.")
 
     X_train, X_test, y_train, y_test = train_test_split(X, Y, random_state=0)
 
-    dtc = DecisionTreeClassifier()
-    rfc = RandomForestClassifier(n_estimators=20)
-    srb = SVC(kernel='rbf', class_weight='auto', gamma = 0.00001, C=1000000)
-    y_pred_one = dtc.fit(X_train, y_train).predict(X_test)
-    y_pred_two = srb.fit(X_train, y_train).predict(X_test)
-    y_pred_thr = rfc.fit(X_train, y_train).predict(X_test)
+    dtc = DecisionTreeClassifier().fit(X_train, y_train)
+    rfc = RandomForestClassifier(n_estimators=20).fit(X_train, y_train)
+    srb = SVC(kernel='rbf', class_weight='auto', gamma = 0.00001, C=1000000).fit(X_train, y_train)
+    
+    y_pred_one = dtc.predict(X_test)
+    y_pred_two = srb.predict(X_test)
+    y_pred_thr = rfc.predict(X_test)
 
     Tools.classification_report("DTC", y_test, y_pred_one, lab_use)
     Tools.classification_report("SVC", y_test, y_pred_two, lab_use)
-    Tools.classification_report("RFC", y_test, y_pred_two, lab_use)
+    Tools.classification_report("RFC", y_test, y_pred_thr, lab_use)
 
-@main.command()
-@click.argument('pickle_svm_object', type=click.File('rb'))
-def test(pickle_svm_object):
-    click.echo("😐  Creating features.")
-    sv = pickle.load(pickle_svm_object)
+    DRS = [dtc, rfc, srb]
 
-    s = Samples()
-
-    for i in s.LABEL_DICT_USED:
-        w = s.probe(i)
-        c = 0
-        for row in w:
-            c += 1
-            cls = sv.predict(Routines.feature_vector(zip(*row)))
-            print("Predicted: {0}; Actual: {1}".format(cls, i))
+    pickle.dump(DRS, dmp)
 
 @main.command()
 @click.option('--port', '-p',
@@ -200,9 +135,9 @@ def test(pickle_svm_object):
     prompt = True,
     help = "UDP Broadcast Port Number"
 )
-@click.argument('pickled_svm_object', type=click.File('rb'))
-def f_test(pickled_svm_object, port):
-    support_vector_classifier = pickle.load(pickled_svm_object)
+@click.argument('dmp', type=click.File('rb'))
+def f_test(dmp, port):
+    DRS = pickle.load(dmp)
 
     @UDP.handler
     def svm_test(**kwargs):
@@ -211,20 +146,15 @@ def f_test(pickled_svm_object, port):
             click.echo(".", nl=False)
             buffer.append(kwargs['dat']['accelerometer'])
 
-        if len(buffer) == 64:
+        if len(buffer) == 100:
             buf_ftr = Routines.feature_vector(zip(*buffer))
-            pred = support_vector_classifier.predict(buf_ftr)
-            #print(buf_ftr)
-            buffer[:] = []
 
-            if pred in [4, 5, 6]:
-                click.echo("😆  {0} Stationary".format(pred))
-            if pred == 1:
-                click.echo("😆  {0} Walking".format(pred))
-            if pred == 2:
-                click.echo("😆  {0} Walking Up".format(pred))
-            if pred == 3:
-                click.echo("🚶  {0} Walking Down".format(pred))
+            out = []
+
+            for clsfr in DRS:
+                out.append(clsfr.predict(buf_ftr))
+
+            print(out)
 
     UDP.start_routine('', port)
 

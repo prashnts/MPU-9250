@@ -8,7 +8,7 @@ import click
 from .helper import Helper
 
 WINDOWLEN = 100
-STEP = 10
+STEP = 20
 
 class UCI(object):
     """

@@ -606,12 +606,16 @@ class Tools(object):
         acc_sc  = accuracy_score(test, pred, lab_use)
         cls_rep = classification_report(test, pred, target_names=lab_use)
 
+        from .sample_dump import WINDOWLEN, STEP
+
         plt.style.use(['bmh','ggplot'])
         fig = plt.figure(figsize=(112, 81), dpi=900)
-        la = "{0}_{1}".format(title, int(time.time()))
+        la = "{0}_{1}_{2}".format(title, int(time.time()), WINDOWLEN)
+
 
         with open(la + ".report.txt", "w") as minion:
             minion.write(title)
+            minion.write("\nWindow Len: {0}; Step: {1}\n".format(WINDOWLEN, STEP))
             minion.write("\nNormalised Confusion Matrix\n")
             minion.write(str(cm_nrm))
             minion.write("\nAccuracy Score\n")
@@ -630,3 +634,8 @@ class Tools(object):
         plt.ylabel('True label')
         plt.xlabel('Predicted label')
         plt.savefig(la + ".svg")
+
+    @staticmethod
+    def generate_example_plots():
+        """"""
+        pass
