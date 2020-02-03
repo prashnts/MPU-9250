@@ -1,0 +1,15 @@
+\usepackage[table]{xcolor}
+\usepackage{collcell}
+\usepackage{hhline}
+\usepackage{pgf}
+
+\newcommand\gray{gray}
+
+\newcommand\ColCell[1]{%
+  \pgfmathparse{#1<.8?1:0}%
+    \ifnum\pgfmathresult=0\relax\color{white}\fi
+  \pgfmathparse{1-#1}%
+  \expandafter\cellcolor\expandafter[%
+    \expandafter\gray\expandafter]\expandafter{\pgfmathresult}#1}
+
+\newcolumntype{E}{>{\collectcell\ColCell}c<{\endcollectcell}}

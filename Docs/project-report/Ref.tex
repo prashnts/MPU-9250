@@ -1,0 +1,364 @@
+%----------------------------------------------------------------------------------------
+%	PACKAGES AND OTHER DOCUMENT CONFIGURATIONS
+%----------------------------------------------------------------------------------------
+
+\documentclass[
+10pt, % Main document font size
+a4paper, % Paper type, use 'letterpaper' for US Letter paper
+oneside, % One page layout (no page indentation)
+%twoside, % Two page layout (page indentation for binding and different headers)
+headinclude,footinclude, % Extra spacing for the header and footer
+BCOR5mm, % Binding correction
+]{scrartcl}
+
+\input{structure.tex} % Include the structure.tex file which specified the document structure and layout
+
+\hyphenation{Fortran hy-phen-ation} % Specify custom hyphenation points in words with dashes where you would like hyphenation to occur, or alternatively, don't put any dashes in a word to stop hyphenation altogether
+
+%----------------------------------------------------------------------------------------
+%	TITLE AND AUTHOR(S)
+%----------------------------------------------------------------------------------------
+
+\title{\normalfont\spacedallcaps{Assistive Device to map and interpret the local scene for imparting Spatial Awareness in Visually Impaired People}} % The article title
+
+\author{\spacedlowsmallcaps{Abhijeet Parmar* \& Prashant Sinha\textsuperscript{1}}} % The article author(s) - author affiliations need to be specified in the AUTHOR AFFILIATIONS block
+
+\date{} % An optional date to appear under the author(s)
+
+%----------------------------------------------------------------------------------------
+
+\begin{document}
+
+%----------------------------------------------------------------------------------------
+%	HEADERS
+%----------------------------------------------------------------------------------------
+
+\renewcommand{\sectionmark}[1]{\markright{\spacedlowsmallcaps{#1}}} % The header for all pages (oneside) or for even pages (twoside)
+%\renewcommand{\subsectionmark}[1]{\markright{\thesubsection~#1}} % Uncomment when using the twoside option - this modifies the header on odd pages
+\lehead{\mbox{\llap{\small\thepage\kern1em\color{halfgray} \vline}\color{halfgray}\hspace{0.5em}\rightmark\hfil}} % The header style
+
+\pagestyle{scrheadings} % Enable the headers specified in this block
+
+%----------------------------------------------------------------------------------------
+%	TABLE OF CONTENTS & LISTS OF FIGURES AND TABLES
+%----------------------------------------------------------------------------------------
+
+\maketitle % Print the title/author/date block
+
+\setcounter{tocdepth}{2} % Set the depth of the table of contents to show sections and subsections only
+
+\tableofcontents % Print the table of contents
+
+\listoffigures % Print the list of figures
+
+\listoftables % Print the list of tables
+
+%----------------------------------------------------------------------------------------
+%	ABSTRACT
+%----------------------------------------------------------------------------------------
+
+\section*{Abstract} % This section will not appear in the table of contents due to the star (\section*)
+
+\lipsum[1] % Dummy text
+
+%----------------------------------------------------------------------------------------
+%	AUTHOR AFFILIATIONS
+%----------------------------------------------------------------------------------------
+
+{\let\thefootnote\relax\footnotetext{* \textit{Department of Biology, University of Examples, London, United Kingdom}}}
+
+{\let\thefootnote\relax\footnotetext{\textsuperscript{1} \textit{Department of Chemistry, University of Examples, London, United Kingdom}}}
+
+%----------------------------------------------------------------------------------------
+
+\newpage % Start the article content on the second page, remove this if you have a longer abstract that goes onto the second page
+
+%----------------------------------------------------------------------------------------
+%	INTRODUCTION
+%----------------------------------------------------------------------------------------
+
+\section{Introduction}
+\subsection{Statement of the Problem}
+Visually impaired people confront a number of challenges in their daily life - from figuring out if they are at the correct bus stop to reading the label on their soft drink bottle. Navigation, for instance, is very difficult for a person and prevents the user from moving independently or walk safely.
+
+A number of assistive technologies are available for users now a days which help a visually impaired person to perform their day to day activities, such as:
+
+\begin{enumerate}
+	\item Screen Reader: Allows the user to use a computer and mobile phone. It is an example of software based assistance that reads the content of the screen to the user and allows them to use the device as a regular person. It is not perfect, for, it requires the developers of the apps to incorporate the assistive guidelines during the development process.
+	\item GPS and Navigation: Allows the users to pinpoint their location on map, and also get step by step directions to a specified locations. This helps users to navigate and prevents them from losing their way.
+	\item Refreshable Braille Display: It consists of electronically actuated dots in a matrix of 4x2 dots per character. The dots raise and depress to form each of the character, therefore making use of braille script to present the characters to the user.
+	\item Tactile paving on sidewalks, metro stations and shopping complexes; elevators with braille embossed buttons; and announcements in trains also aid into facilitating the visually impaired people. 
+\end{enumerate}
+
+However, it is still very difficult to navigate and identify objects in new or strange locations, or locations that are not designed keeping accessibility in mind. They’ll also require constant assistance from other people, which is, in turn, subject to knowledge and behaviour of other people and has its own social, and mental consequences.
+
+The navigation technologies that are available today can indeed give navigation instructions from a location to another, however, the instructions require personal judgement of the user. These include avoiding hitting various obstacles, staying on side walk, and so on. For a blind person, following these instructions is not less than a challenge either.
+
+Hence, it is required that proper steps be taken to make a visually impaired person partially or fully self reliable and hence support them to live independently. 
+
+\subsection{Proposed Solution}
+Through the global penetration of Smart Phones, access to Navigation Services that are assisted though GPS are available very easily and are cost affective. However, the instructions provided by the Navigation Services require personal judgement of the user to follow. This includes avoiding obstacles that are encountered on the way, staying on the sidewalk and in correct direction and so on. This is not an easy task for a visually impaired person. The services also fail to work in an indoor environment.
+
+Hence, our solution proposes that increasing the local spatial awareness is a key solution to this problem, and would help the visually impaired people gain more self-reliance. 
+%----------------------------------------------------------------------------------------
+%	METHODS
+%----------------------------------------------------------------------------------------
+
+\section{Motion Recognition using Inertial Measurement Unit}
+\subsection{Background}
+An Inertial Measurement Sensor is an electronic sensor that 
+an array of sensors that help to determine the external force applied and the motion of an object. By using the combination of, it is possible to computationally
+An IMU may contain an Accelerometer, Gyroscope, Magnetometer, GPS, Pressure Sensor etc.
+
+An accelerometer measures the acceleration in a particular axis.
+A gyroscope measures the rate of rotation in a particular axis.
+A magnetometer (also known as a digital compass) measures the magnitude of magnetic field in a particular axis.
+Through a combination of these three devices, in the three orthogonal axes, it is possible to accurately reproduce the motion of an object the array is pivoted to.
+
+Motion Tracker
+We built a motion tracking and logging shield for an Arduino Uno for collecting various motion data. The shield consists of the following:
+Invensense MPU-9250: contains an Accelerometer, Gyroscope and Magnetometer in a 3x3 mm MEMS package, hereby providing a triaxial acceleration, rotation and magnetic field data.
+Onboard 16 GB flash storage for sensor data logging.
+8 bit DIP switch to assign additional metadata to the log file.
+Sensor data fusion
+The raw sensor data from the Motion Tracker 
+Data from the three axes of the accelerometer, gyroscope and magnetometer are fused to get the Attitude and Heading of the device: Yaw, Pitch and Roll.
+Quaternion filter was implemented as an orientation filter2.
+
+Data logging and Visualisation
+We used InfluxDB for efficient logging and retrieval of sensor data for further processing.
+The sensor data can be sent to the server through UDP channel over WiFi, though USB, or can be logged onto an on-board MicroSD card.
+
+\section{Realtime Human Activity Recognition Task}
+
+\subsection{Background}
+Human Activity Recognition is a problem of inferring  refers to the process of inferring the current state of the user. This may include tracking whether the user is Walking, Running, Climbing the Stairs, is Stationary, etc.
+\subsubsection{Applications}
+
+\subsection{Previous Work}
+\subsection{Undertaken Challenge}
+\subsubsection{Unaided Acceleration Tracker Constraint}
+It is required that the task is solved solely through the data from a single triaxial accelerometer. This reduces the hardware complexity.
+\subsubsection{Attitude Independent Recognition (Axis Constraint)} 
+It is required that the task be solved without any prior knowledge of the location and orientation of the Motion Tracker. This follows from the fact that the motion tracker could be located at any spot with the user, for example their pockets, their arm or in their hand.
+\subsubsection{Hardware Friendly Classification (Time Complexity Constraint)}
+It is required that the features that are generated from the sensor sample sequence must be computationally low cost to calculate. This is required for energy efficient implementation of the technique in various portable devices such as a fitness tracker or a mobile phone.
+\subsection{Methodology}
+We defined and employed following methodology to solve the HAR Task:
+\subsubsection{Acquisition of Activity Dataset}
+Motion data was logged through motion tracker and an iPhone app at the sampling rate of 50 Hz while multiple Human subjects performed various activities as mentioned in section []. The location of the devices and the duration of activities was neither controlled nor taken into consideration. The subjects were also allowed to move or use the devices during the activity. These events were also not controlled and did not have any exclusive label. This was done to ensure that the dataset reflected the real-world usage pattern. The starting and ending timestamp of the activities were used to label the logged data.
+
+We also obtained the public dataset from [cite UCI], and [cite Twenté] to further increase our dataset. Only the accelerometer data was utilised from the obtained dataset.
+
+\subsubsection{Activity Classes}
+We define following activity classes to set the scope of the HAR task.
+\begin{enumerate}
+	\item Stationary
+	\begin{enumerate}
+		\item Sitting
+		\item Standing
+	\end{enumerate}
+	\item Active
+	\begin{enumerate}
+		\item Walking
+		\begin{enumerate}
+			\item Typical
+			\item Stair
+			\begin{enumerate}
+				\item Walking Upstairs
+				\item Walking Downstairs
+			\end{enumerate}
+		\end{enumerate}
+		\item Running
+		\begin{enumerate}
+			\item Typical
+			\item Jogging
+		\end{enumerate}
+		\item Biking
+	\end{enumerate}
+\end{enumerate}
+
+\subsubsection{Windowing and Overlapping}
+Due to the nature of task, it is often very difficult to represent a particular activity solely through one sample point. Hence, it is recommended to utilise a sequence of signal samples to represent the activity instances.
+
+In the obtained discreet-time sample sequence, we defined a window of sample length 50 for all the three axes as activity instance. This represents 1 second window in our dataset since the sampling rate is 50Hz.
+
+The windows were overlapped after every 25 samples to reduce any inherent bias due to windowing.
+
+\subsubsection{Feature Generation}
+To reduce the computation complexity and enhance the recognition characteristics, feature generation is required. Overall 5 features were calculated for each axis. To conform to the Axis Constraint as defined in section [], the features from the three axes were combined to get a final feature vector of length 5. Hence, a 150 length sample vector for three axes was reduced to a vector of length 5.
+
+\subsubsection{Classification using Supervised Learning}
+We trained a Support Vector Machine (SVM) classifier with gaussian Radial Basis Function (rbf) kernel using the labelled feature vectors. The trained SVM was then used for realtime motion classification.
+
+\subsubsection{Realtime Activity Classification}
+To implement the realtime activity classification, the triaxial accelerometer is sampled at a sampling rate of 50 Hz. These samples are stored in a buffer array until the length of array is 50. The feature vector is then calculated for this buffer array. The predicted activity label for this feature vector is obtained by fitting it in the trained SVM.
+
+\subsection{Feature Engineering}
+\subsubsection{Background and preliminary Investigation}
+From the [following] visualisation of raw signals it can be observed that various activities posses an inherent periodic nature. This observation can be backed by observing the Autocorrelation and Lag plot of the data samples. [figure- autocorrelation plot]
+
+To conform to the Time Complexity Constraint as defined in section [], all the features are calculated in time domain, since the frequency domain conversion using discreet Fourier transform (DFT) is a computationally intensive process.
+
+The features are calculated for all the three axes of the activity instances obtained after windowing and overlapping the data.
+
+\subsubsection{Axial Features}
+Mathematically, the activity instance can be represented by a sequence of discreet acceleration samples. We also define an index i, i belongs to N and i = 1 to 50. If axt = axial acceleration at any arbitrary time t, then, S = (axt)t=0 to t=50.
+
+The following parameters are calculated for all the three axes:
+\paragraph{Key point estimation}
+We define the key points, Kp, a subsequence of S, where the signal sequence attains relative maximum or minimum value (extrema values).
+
+Due to noisy nature of the signal, the relative extrema are estimated by taking n neighbours of the element ei into consideration. This ensures that small fluctuations are not accounted by the key points.
+\paragraph{Polygon Chain Approximation}
+The polygonal chain is defined as a piecewise function of line segments that joins the key points of the signal. 
+Binned slopes
+We divide the plane into n equal regions and estimate the slopes that may fall 
+
+Absolute area under linearly interpolated curve
+Total sum of squares
+Variance of smoothened series
+
+\subsection{Axial Feature Pooling and Feature Vector}
+\subsection{Feature Classification}
+\subsection{Results and Discussion}
+
+\begin{figure}[tb]
+\centering
+\includegraphics[width=0.5\columnwidth]{GalleriaStampe}
+\caption[An example of a floating figure]{An example of a floating figure (a reproduction from the \emph{Gallery of prints}, M.~Escher,\index{Escher, M.~C.} from \url{http://www.mcescher.com/}).} % The text in the square bracket is the caption for the list of figures while the text in the curly brackets is the figure caption
+\label{fig:gallery}
+\end{figure}
+
+\lipsum[5] % Dummy text
+
+\begin{enumerate}[noitemsep] % [noitemsep] removes whitespace between the items for a compact look
+\item First item in a list
+\item Second item in a list
+\item Third item in a list
+\end{enumerate}
+
+%------------------------------------------------
+
+\subsection{Paragraphs}
+
+\lipsum[6] % Dummy text
+
+\paragraph{Paragraph Description} \lipsum[7] % Dummy text
+
+\paragraph{Different Paragraph Description} \lipsum[8] % Dummy text
+
+%------------------------------------------------
+
+\subsection{Math}
+
+\lipsum[4] % Dummy text
+
+\begin{equation}
+\cos^3 \theta =\frac{1}{4}\cos\theta+\frac{3}{4}\cos 3\theta
+\label{eq:refname2}
+\end{equation}
+
+\lipsum[5] % Dummy text
+
+\begin{definition}[Gauss]
+To a mathematician it is obvious that
+$\int_{-\infty}^{+\infty}
+e^{-x^2}\,dx=\sqrt{\pi}$.
+\end{definition}
+
+\begin{theorem}[Pythagoras]
+The square of the hypotenuse (the side opposite the right angle) is equal to the sum of the squares of the other two sides.
+\end{theorem}
+
+\begin{proof}
+We have that $\log(1)^2 = 2\log(1)$.
+But we also have that $\log(-1)^2=\log(1)=0$.
+Then $2\log(-1)=0$, from which the proof.
+\end{proof}
+
+%----------------------------------------------------------------------------------------
+%	RESULTS AND DISCUSSION
+%----------------------------------------------------------------------------------------
+
+\section{Results and Discussion}
+
+\lipsum[10] % Dummy text
+
+%------------------------------------------------
+
+\subsection{Subsection}
+
+\lipsum[11] % Dummy text
+
+\subsubsection{Subsubsection}
+\cite{Figueredo:2009dg}
+\lipsum[12] % Dummy text
+
+\begin{description}
+\item[Word] Definition
+\item[Concept] Explanation
+\item[Idea] Text
+\end{description}
+
+\lipsum[12] % Dummy text
+
+\begin{itemize}[noitemsep] % [noitemsep] removes whitespace between the items for a compact look
+\item First item in a list
+\item Second item in a list
+\item Third item in a list
+\end{itemize}
+
+\subsubsection{Table}
+
+\lipsum[13] % Dummy text
+
+\begin{table}[hbt]
+\caption{Table of Grades}
+\centering
+\begin{tabular}{llr}
+\toprule
+\multicolumn{2}{c}{Name} \\
+\cmidrule(r){1-2}
+First name & Last Name & Grade \\
+\midrule
+John & Doe & $7.5$ \\
+Richard & Miles & $2$ \\
+\bottomrule
+\end{tabular}
+\label{tab:label}
+\end{table}
+
+Reference to Table~\vref{tab:label}. % The \vref command specifies the location of the reference
+
+%------------------------------------------------
+
+\subsection{Figure Composed of Subfigures}
+
+Reference the figure composed of multiple subfigures as Figure~\vref{fig:esempio}. Reference one of the subfigures as Figure~\vref{fig:ipsum}. % The \vref command specifies the location of the reference
+
+\lipsum[15-18] % Dummy text
+
+\begin{figure}[tb]
+\centering
+\subfloat[A city market.]{\includegraphics[width=.45\columnwidth]{Lorem}} \quad
+\subfloat[Forest landscape.]{\includegraphics[width=.45\columnwidth]{Ipsum}\label{fig:ipsum}} \\
+\subfloat[Mountain landscape.]{\includegraphics[width=.45\columnwidth]{Dolor}} \quad
+\subfloat[A tile decoration.]{\includegraphics[width=.45\columnwidth]{Sit}}
+\caption[A number of pictures.]{A number of pictures with no common theme.} % The text in the square bracket is the caption for the list of figures while the text in the curly brackets is the figure caption
+\label{fig:esempio}
+\end{figure}
+
+%----------------------------------------------------------------------------------------
+%	BIBLIOGRAPHY
+%----------------------------------------------------------------------------------------
+
+\renewcommand{\refname}{\spacedlowsmallcaps{References}} % For modifying the bibliography heading
+
+\bibliographystyle{unsrt}
+
+\bibliography{bibliography.bib} % The file containing the bibliography
+
+%----------------------------------------------------------------------------------------
+
+\end{document}
